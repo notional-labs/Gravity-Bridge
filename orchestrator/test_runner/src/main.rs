@@ -15,6 +15,7 @@ use crate::ethereum_keys::ethereum_keys_test;
 use crate::ibc_auto_forward::ibc_auto_forward_test;
 use crate::ibc_metadata::ibc_metadata_proposal_test;
 use crate::ica_host::ica_host_happy_path;
+use crate::inflation_knockdown::inflation_knockdown_test;
 use crate::invalid_events::invalid_events;
 use crate::pause_bridge::pause_bridge_test;
 use crate::send_to_eth_fees::send_to_eth_fees_test;
@@ -60,6 +61,7 @@ mod happy_path_v2;
 mod ibc_auto_forward;
 mod ibc_metadata;
 mod ica_host;
+mod inflation_knockdown;
 mod invalid_events;
 mod orch_keys;
 mod orch_only;
@@ -257,8 +259,6 @@ pub async fn main() {
         .unwrap()
         .is_some());
 
-    start_ibc_relayer(&gravity_contact, &ibc_contact, &keys, &ibc_keys).await;
-
     // This segment contains optional tests, by default we run a happy path test
     // this tests all major functionality of Gravity once or twice.
     // VALIDATOR_OUT simulates a validator not participating in the happy path test
@@ -294,6 +294,7 @@ pub async fn main() {
     // SEND_TO_ETH_FEES tests that Cosmos->Eth fees are collected and in the right amounts
     // ICA_HOST_HAPPY_PATH tests that the interchain accounts host module is correctly configured on Gravity
     // RUN_ORCH_ONLY runs only the orchestrators, for local testing where you want the chain to just run.
+    // INFLATION_KNOCKDOWN tests a governance proposal to reduce inflation
     let test_type = env::var("TEST_TYPE");
     info!("Starting tests with {:?}", test_type);
     if let Ok(test_type) = test_type {
@@ -472,6 +473,7 @@ pub async fn main() {
             return;
         } else if test_type == "UPGRADE_PART_1" {
             info!("Starting Gravity Upgrade test Part 1");
+            start_ibc_relayer(&gravity_contact, &ibc_contact, &keys, &ibc_keys).await;
             let contact = Contact::new(
                 COSMOS_NODE_GRPC.as_str(),
                 TOTAL_TIMEOUT,
@@ -492,6 +494,7 @@ pub async fn main() {
             return;
         } else if test_type == "UPGRADE_PART_2" {
             info!("Starting Gravity Upgrade test Part 2");
+            start_ibc_relayer(&gravity_contact, &ibc_contact, &keys, &ibc_keys).await;
             let contact = Contact::new(
                 COSMOS_NODE_GRPC.as_str(),
                 TOTAL_TIMEOUT,
@@ -512,6 +515,7 @@ pub async fn main() {
             return;
         } else if test_type == "UPGRADE_ONLY" {
             info!("Running a gravity upgrade with no assertions");
+            start_ibc_relayer(&gravity_contact, &ibc_contact, &keys, &ibc_keys).await;
             let contact = Contact::new(
                 COSMOS_NODE_GRPC.as_str(),
                 TOTAL_TIMEOUT,
@@ -523,6 +527,7 @@ pub async fn main() {
             return;
         } else if test_type == "IBC_AUTO_FORWARD" {
             info!("Starting IBC Auto-Forward test");
+            start_ibc_relayer(&gravity_contact, &ibc_contact, &keys, &ibc_keys).await;
             ibc_auto_forward_test(
                 &web30,
                 grpc_client,
@@ -536,6 +541,7 @@ pub async fn main() {
             return;
         } else if test_type == "ETHEREUM_KEYS" || test_type == "ETHERMINT_KEYS" {
             info!("Starting Ethereum Keys test");
+            start_ibc_relayer(&gravity_contact, &ibc_contact, &keys, &ibc_keys).await;
             let result = ethereum_keys_test(
                 &web30,
                 grpc_client,
@@ -566,6 +572,7 @@ pub async fn main() {
             vesting_test(&gravity_contact, vesting_keys).await;
             return;
         } else if test_type == "SEND_TO_ETH_FEES" {
+            info!("Starting Send to Eth fees test!");
             send_to_eth_fees_test(
                 &web30,
                 &gravity_contact,
@@ -578,6 +585,7 @@ pub async fn main() {
             return;
         } else if test_type == "ICA_HOST_HAPPY_PATH" {
             info!("Starting Interchain Accounts Host Module Happy Path Test");
+            start_ibc_relayer(&gravity_contact, &ibc_contact, &keys, &ibc_keys).await;
             ica_host_happy_path(
                 &web30,
                 grpc_client,
@@ -592,6 +600,10 @@ pub async fn main() {
         } else if test_type == "RUN_ORCH_ONLY" {
             orch_only_test(keys, gravity_address).await;
             sleep(Duration::from_secs(1_000_000_000)).await;
+            return;
+        } else if test_type == "INFLATION_KNOCKDOWN" {
+            info!("Starting Inflation knockdown test!");
+            inflation_knockdown_test(&gravity_contact, keys).await;
             return;
         } else if !test_type.is_empty() {
             panic!("Err Unknown test type")
