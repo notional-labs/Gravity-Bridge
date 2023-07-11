@@ -92,8 +92,10 @@ func endAuctionPeriod(
 }
 
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) {
-	params := k.GetParams(ctx)
-
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 	// An initial auction period need to be set as a starting point
 	lastAuctionPeriods, found := k.GetLatestAuctionPeriod(ctx)
 	if !found {
@@ -109,7 +111,10 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak type
 }
 
 func EndBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) {
-	params := k.GetParams(ctx)
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	// An initial auction period need to be set as a starting point
 	lastAuctionPeriods, found := k.GetLatestAuctionPeriod(ctx)

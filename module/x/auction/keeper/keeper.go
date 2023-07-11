@@ -26,15 +26,23 @@ type Keeper struct {
 }
 
 // GetParams get params
-// GetParams returns the parameters from the store
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
-	return
+func (k Keeper) GetParams(ctx sdk.Context) (types.Params, error) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.ParamsKey))
+	params := types.Params{}
+	err := k.cdc.Unmarshal(bz, &params)
+	return params, err
 }
 
-// SetParams sets the parameters in the store
-func (k Keeper) SetParams(ctx sdk.Context, ps types.Params) {
-	k.paramSpace.SetParamSet(ctx, &ps)
+// SetParams set params
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		return err
+	}
+	store.Set([]byte(types.ParamsKey), bz)
+	return nil
 }
 
 // SendToCommunityPool handles incorrect SendToCosmos calls to the community pool, since the calls
