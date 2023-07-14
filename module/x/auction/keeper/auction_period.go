@@ -38,6 +38,28 @@ func (k Keeper) GetAllAuctionPeriods(ctx sdk.Context) []types.AuctionPeriod {
 	return auctionPeriods
 }
 
+// GetAuctionPeriodsByAuctionId returns all auction periods.
+func (k Keeper) GetAuctionPeriodsByAuctionId(ctx sdk.Context, auctionId uint64) []types.AuctionPeriod {
+	auctions := k.GetAllAuctions(ctx)
+	auctionPeriodIds := []uint64{}
+	auctionPeriodsFound := []types.AuctionPeriod{}
+	for _, auction := range auctions {
+		if auction.Id == auctionId {
+			auctionPeriodIds = append(auctionPeriodIds, auction.AuctionPeriodId)
+		}
+	}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixAuctionPeriod))
+
+	for _, auctionPeriodId := range auctionPeriodIds {
+		var autionPeriod types.AuctionPeriod
+		bz := store.Get(uint64ToBytes(auctionPeriodId))
+		k.cdc.MustUnmarshal(bz, &autionPeriod)
+		
+		auctionPeriodsFound = append(auctionPeriodsFound, autionPeriod)
+	}
+	return auctionPeriodsFound
+}
+
 // GetLatestAuctionPeriod returns the latest auction period.
 func (k Keeper) GetLatestAuctionPeriod(ctx sdk.Context) (*types.AuctionPeriod, bool) {
 	auctionPeriods := k.GetAllAuctionPeriods(ctx)
