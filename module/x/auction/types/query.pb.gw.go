@@ -52,7 +52,7 @@ func local_request_Query_Params_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 func request_Query_AuctionPeriodsByAuctionId_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryAuctionPeriodsByAuctionId
+	var protoReq QueryAuctionPeriodsById
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -79,7 +79,7 @@ func request_Query_AuctionPeriodsByAuctionId_0(ctx context.Context, marshaler ru
 }
 
 func local_request_Query_AuctionPeriodsByAuctionId_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryAuctionPeriodsByAuctionId
+	var protoReq QueryAuctionPeriodsById
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -485,7 +485,7 @@ var (
 
 	pattern_Query_AuctionByAuctionIdAndPeriodId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"auction", "item"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AllAuctionsByBidderAndPeriodId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"auction", "all"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllAuctionsByBidderAndPeriodId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"auction", "all-by-bidder-period"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_HighestBidByAuctionIdAndPeriodId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"auction", "highest-bid"}, "", runtime.AssumeColonVerbOpt(true)))
 )
