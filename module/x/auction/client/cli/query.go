@@ -14,7 +14,7 @@ import (
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
 	// Group auction queries under a subcommand
-
+	// nolint: exhaustruct
 	auctionQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
@@ -29,11 +29,12 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdAuction(),
 		GetCmdAuctionPeriods(),
 		GetCmdAuctionPeriods(),
-		}...)
+	}...)
 
 	return auctionQueryCmd
 }
 func GetCmdQueryParams() *cobra.Command {
+	// nolint: exhaustruct
 	cmd := &cobra.Command{
 		Use:   "params",
 		Args:  cobra.NoArgs,
@@ -58,7 +59,6 @@ func GetCmdQueryParams() *cobra.Command {
 	return cmd
 }
 
-
 // GetCmdAuctionPeriods fetches auction periods by id
 func GetCmdAuctionPeriods() *cobra.Command {
 	// nolint: exhaustruct
@@ -76,7 +76,7 @@ func GetCmdAuctionPeriods() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			
+
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.AuctionPeriodsByAuctionId(cmd.Context(), &types.QueryAuctionPeriodsById{
@@ -95,6 +95,7 @@ func GetCmdAuctionPeriods() *cobra.Command {
 }
 
 // GetCmdAuction fetches auction by auction id and period id
+// nolint: dupl
 func GetCmdAuction() *cobra.Command {
 	// nolint: exhaustruct
 	cmd := &cobra.Command{
@@ -120,7 +121,7 @@ func GetCmdAuction() *cobra.Command {
 
 			res, err := queryClient.AuctionByAuctionIdAndPeriodId(cmd.Context(), &types.QueryAuctionByAuctionIdAndPeriodId{
 				AuctionId: argAuctionId,
-				PeriodId: argPeriodId,
+				PeriodId:  argPeriodId,
 			})
 			if err != nil {
 				return err
@@ -154,7 +155,7 @@ func GetCmdAllAuction() *cobra.Command {
 			}
 
 			res, err := queryClient.AllAuctionsByBidderAndPeriodId(cmd.Context(), &types.QueryAllAuctionsByBidderAndPeriodId{
-				Address: args[0],
+				Address:  args[0],
 				PeriodId: argPeriodId,
 			})
 			if err != nil {
@@ -170,6 +171,7 @@ func GetCmdAllAuction() *cobra.Command {
 }
 
 // GetCmdHighestBidBy fetches the highest bid of the auction with auction id and period id
+// nolint: dupl
 func GetCmdHighestBid() *cobra.Command {
 	// nolint: exhaustruct
 	cmd := &cobra.Command{
@@ -196,7 +198,7 @@ func GetCmdHighestBid() *cobra.Command {
 
 			res, err := queryClient.HighestBidByAuctionIdAndPeriodId(cmd.Context(), &types.QueryHighestBidByAuctionIdAndPeriodId{
 				AuctionId: argAuctionId,
-				PeriodId: argPeriodId,
+				PeriodId:  argPeriodId,
 			})
 			if err != nil {
 				return err
