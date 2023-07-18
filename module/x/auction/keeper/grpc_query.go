@@ -19,11 +19,13 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func (k Querier) AuctionPeriodsByAuctionId(c context.Context, req *types.QueryAuctionPeriodsById) (*types.QueryAuctionPeriodsByIdResponse, error) {
+func (k Querier) AuctionPeriodByAuctionId(c context.Context, req *types.QueryAuctionPeriodById) (*types.QueryAuctionPeriodByIdResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	auctionPeriods := k.GetAuctionPeriodsByAuctionId(ctx, req.Id)
-
-	return &types.QueryAuctionPeriodsByIdResponse{AuctionPeriods: auctionPeriods}, nil
+	auctionPeriod, found := k.GetAuctionPeriodByID(ctx, req.Id)
+	if !found {
+		return &types.QueryAuctionPeriodByIdResponse{AuctionPeriod: nil}, nil
+	}
+	return &types.QueryAuctionPeriodByIdResponse{AuctionPeriod: &auctionPeriod}, nil
 }
 
 func (k Querier) AuctionByAuctionIdAndPeriodId(c context.Context, req *types.QueryAuctionByAuctionIdAndPeriodId) (*types.QueryAuctionByAuctionIdAndPeriodIdResponse, error) {

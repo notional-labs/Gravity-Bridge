@@ -16,8 +16,8 @@ service Query {
       option (google.api.http).get = "/auction/params";
     }
 
-    rpc AuctionPeriodsByAuctionId(QueryAuctionPeriodsById) returns (QueryAuctionPeriodsByIdResponse) {
-      option (google.api.http).get = "/auction/periods/{id}";
+    rpc AuctionPeriodByAuctionId(QueryAuctionPeriodById) returns (QueryAuctionPeriodByIdResponse) {
+      option (google.api.http).get = "/auction/period/{id}";
     }
 
     rpc AuctionByAuctionIdAndPeriodId(QueryAuctionByAuctionIdAndPeriodId) returns (QueryAuctionByAuctionIdAndPeriodIdResponse) {
@@ -41,11 +41,11 @@ service Query {
     Params params = 1 [ (gogoproto.nullable) = false ];
   }
 
-message QueryAuctionPeriodsById {
+message QueryAuctionPeriodById {
   uint64 id = 1;
 }
-message QueryAuctionPeriodsByIdResponse {
-  repeated AuctionPeriod auction_periods = 1 [ (gogoproto.nullable) = false ];
+message QueryAuctionPeriodByIdResponse {
+  AuctionPeriod auction_period = 1;
 }
 
 message QueryAuctionByAuctionIdAndPeriodId{

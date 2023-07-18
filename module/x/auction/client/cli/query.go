@@ -79,7 +79,7 @@ func GetCmdAuctionPeriods() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AuctionPeriodsByAuctionId(cmd.Context(), &types.QueryAuctionPeriodsById{
+			res, err := queryClient.AuctionPeriodByAuctionId(cmd.Context(), &types.QueryAuctionPeriodById{
 				Id: argId,
 			})
 			if err != nil {
