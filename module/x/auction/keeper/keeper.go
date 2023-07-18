@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	gravitykeeper "github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -23,6 +24,7 @@ type Keeper struct {
 	BankKeeper    *bankkeeper.BaseKeeper
 	AccountKeeper *authkeeper.AccountKeeper
 	DistKeeper    *distrkeeper.Keeper
+	GravityKeeper *gravitykeeper.Keeper
 }
 
 // GetParams get params
