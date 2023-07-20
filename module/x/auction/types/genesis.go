@@ -2,6 +2,11 @@ package types
 
 import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+const (
+	// todo: implement oracle constants as params
+	DefaultParamspace = ModuleName
+)
+
 func DefaultGenesis() *GenesisState {
 
 	return &GenesisState{

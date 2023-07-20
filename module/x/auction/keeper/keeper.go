@@ -27,6 +27,30 @@ type Keeper struct {
 	GravityKeeper *gravitykeeper.Keeper
 }
 
+func NewKeeper(
+	storeKey sdk.StoreKey,
+	paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec,
+	bankKeeper *bankkeeper.BaseKeeper,
+	accKeeper *authkeeper.AccountKeeper,
+	distKeeper *distrkeeper.Keeper,
+) Keeper {
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
+	k := Keeper{
+		storeKey:      storeKey,
+		paramSpace:    paramSpace,
+		cdc:           cdc,
+		BankKeeper:    bankKeeper,
+		AccountKeeper: accKeeper,
+		DistKeeper:    distKeeper,
+	}
+	return k
+}
+
 // GetParams get params
 // GetParams returns the parameters from the store
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {

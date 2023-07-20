@@ -67,12 +67,11 @@ import (
 	bech32ibckeeper "github.com/althea-net/bech32-ibc/x/bech32ibc/keeper"
 	bech32ibctypes "github.com/althea-net/bech32-ibc/x/bech32ibc/types"
 
-	gravitykeeper "github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/keeper"
-	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/types"
+	gravityparams "github.com/Gravity-Bridge/Gravity-Bridge/module/app/params"
 
 	auctiontypes "github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"
 
-	gravityparams "github.com/Gravity-Bridge/Gravity-Bridge/module/app/params"
+	gravitykeeper "github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/keeper"
 	gravitytypes "github.com/Gravity-Bridge/Gravity-Bridge/module/x/gravity/types"
 )
 
@@ -214,7 +213,7 @@ var (
 	}
 
 	// TestingGravityParams is a set of gravity params for testing
-	TestingGravityParams = types.Params{
+	TestingGravityParams = gravitytypes.Params{
 		GravityId:                    "testgravityid",
 		ContractSourceHash:           "62328f7bc12efb28f86111d08c29b39285680a906ea0e524e0209d6f6657b713",
 		BridgeEthereumAddress:        "0x8858eeb3dfffa017d4bce9801d340d36cf895ccf",
@@ -235,10 +234,18 @@ var (
 		EthereumBlacklist:            []string{},
 		MinChainFeeBasisPoints:       0,
 	}
+	TestingAuctionParams = auctiontypes.Params{
+		AuctionEpoch:  100,
+		AuctionPeriod: 100,
+		MinBidAmount:  100,
+		BidGap:        100,
+		AuctionRate:   sdk.NewDecWithPrec(1, 2),
+	}
 )
 
 // TestInput stores the various keepers required to test auction
 type TestInput struct {
+	AuctionKeeper     Keeper
 	GravityKeeper     gravitykeeper.Keeper
 	AccountKeeper     authkeeper.AccountKeeper
 	StakingKeeper     stakingkeeper.Keeper
@@ -272,8 +279,8 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 		)
 
 		// Set the balance for the account
-		require.NoError(t, input.BankKeeper.MintCoins(input.Context, types.ModuleName, InitCoins))
-		require.NoError(t, input.BankKeeper.SendCoinsFromModuleToAccount(input.Context, types.ModuleName, acc.GetAddress(), InitCoins))
+		require.NoError(t, input.BankKeeper.MintCoins(input.Context, gravitytypes.ModuleName, InitCoins))
+		require.NoError(t, input.BankKeeper.SendCoinsFromModuleToAccount(input.Context, gravitytypes.ModuleName, acc.GetAddress(), InitCoins))
 
 		// Set the account in state
 		input.AccountKeeper.SetAccount(input.Context, acc)
@@ -386,6 +393,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 	t.Helper()
 
 	// Initialize store keys
+	auctionKey := sdk.NewKVStoreKey(auctiontypes.StoreKey)
 	gravityKey := sdk.NewKVStoreKey(gravitytypes.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(authtypes.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(stakingtypes.StoreKey)
@@ -401,11 +409,10 @@ func CreateTestEnv(t *testing.T) TestInput {
 	keyIbcTransfer := sdk.NewKVStoreKey(ibctransfertypes.StoreKey)
 	keyBech32Ibc := sdk.NewKVStoreKey(bech32ibctypes.StoreKey)
 
-	auctionKey := sdk.NewKVStoreKey(auctiontypes.StoreKey)
-
 	// Initialize memory database and mount stores on it
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(auctionKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(gravityKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
@@ -421,7 +428,6 @@ func CreateTestEnv(t *testing.T) TestInput {
 	ms.MountStoreWithDB(keyIbcTransfer, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyBech32Ibc, sdk.StoreTypeIAVL, db)
 
-	ms.MountStoreWithDB(auctionKey, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -462,12 +468,11 @@ func CreateTestEnv(t *testing.T) TestInput {
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName)
 	paramsKeeper.Subspace(gravitytypes.DefaultParamspace)
+	paramsKeeper.Subspace(auctiontypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(bech32ibctypes.ModuleName)
-
-	paramsKeeper.Subspace(auctiontypes.ModuleName)
 
 	// this is also used to initialize module accounts for all the map keys
 	maccPerms := map[string][]string{
@@ -519,9 +524,9 @@ func CreateTestEnv(t *testing.T) TestInput {
 		if name == distrtypes.ModuleName {
 			// some big pot to pay out
 			amt := sdk.NewCoins(sdk.NewInt64Coin("stake", 500000))
-			err = bankKeeper.MintCoins(ctx, types.ModuleName, amt)
+			err = bankKeeper.MintCoins(ctx, gravitytypes.ModuleName, amt)
 			require.NoError(t, err)
-			err = bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, mod.Name, amt)
+			err = bankKeeper.SendCoinsFromModuleToModule(ctx, gravitytypes.ModuleName, mod.Name, amt)
 
 			// distribution module balance must be outstanding rewards + community pool in order to pass
 			// invariants checks, therefore we must add any amount we add to the module balance to the fee pool
@@ -613,7 +618,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 		panic("Test Env Creation failure, could not set native hrp")
 	}
 
-	gravitykeeper := gravitykeeper.NewKeeper(gravityKey, getSubspace(paramsKeeper, types.DefaultParamspace), marshaler, &bankKeeper,
+	gravitykeeper := gravitykeeper.NewKeeper(gravityKey, getSubspace(paramsKeeper, gravitytypes.DefaultParamspace), marshaler, &bankKeeper,
 		&stakingKeeper, &slashingKeeper, &distKeeper, &accountKeeper, &ibcTransferKeeper, &bech32IbcKeeper)
 
 	stakingKeeper = *stakingKeeper.SetHooks(
@@ -623,20 +628,23 @@ func CreateTestEnv(t *testing.T) TestInput {
 			gravitykeeper.Hooks(),
 		),
 	)
+	autionkeeper := NewKeeper(auctionKey, getSubspace(paramsKeeper, auctiontypes.DefaultParamspace), marshaler, &bankKeeper, &accountKeeper, &distKeeper)
 
 	// set gravityIDs for batches and tx items, simulating genesis setup
 	gravitykeeper.SetLatestValsetNonce(ctx, 0)
 	// TODO: fix this
-	gravitykeeper.setLastObservedEventNonce(ctx, 0)
+	// gravitykeeper.setLastObservedEventNonce(ctx, 0)
 	gravitykeeper.SetLastSlashedValsetNonce(ctx, 0)
 	gravitykeeper.SetLastSlashedBatchBlock(ctx, 0)
 	gravitykeeper.SetLastSlashedLogicCallBlock(ctx, 0)
-	gravitykeeper.setID(ctx, 0, types.KeyLastTXPoolID)
-	gravitykeeper.setID(ctx, 0, types.KeyLastOutgoingBatchID)
-
+	// gravitykeeper.setID(ctx, 0, types.KeyLastTXPoolID)
+	// gravitykeeper.setID(ctx, 0, types.KeyLastOutgoingBatchID)
 	gravitykeeper.SetParams(ctx, TestingGravityParams)
 
+	autionkeeper.SetParams(ctx, TestingAuctionParams)
+
 	testInput := TestInput{
+		AuctionKeeper:   autionkeeper,
 		GravityKeeper:   gravitykeeper,
 		AccountKeeper:   accountKeeper,
 		StakingKeeper:   stakingKeeper,
@@ -669,7 +677,7 @@ func MakeTestCodec() *codec.LegacyAmino {
 	sdk.RegisterLegacyAminoCodec(cdc)
 	ccodec.RegisterCrypto(cdc)
 	params.AppModuleBasic{}.RegisterLegacyAminoCodec(cdc)
-	types.RegisterCodec(cdc)
+	gravitytypes.RegisterCodec(cdc)
 	return cdc
 }
 
@@ -678,7 +686,7 @@ func MakeTestMarshaler() codec.Codec {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	ModuleBasics.RegisterInterfaces(interfaceRegistry)
-	types.RegisterInterfaces(interfaceRegistry)
+	gravitytypes.RegisterInterfaces(interfaceRegistry)
 	return codec.NewProtoCodec(interfaceRegistry)
 }
 
@@ -692,12 +700,12 @@ func MakeTestEncodingConfig() gravityparams.EncodingConfig {
 }
 
 // MintVouchersFromAir creates new gravity vouchers given erc20tokens
-func MintVouchersFromAir(t *testing.T, ctx sdk.Context, k Keeper, dest sdk.AccAddress, amount types.InternalERC20Token) sdk.Coin {
+func MintVouchersFromAir(t *testing.T, ctx sdk.Context, k Keeper, dest sdk.AccAddress, amount gravitytypes.InternalERC20Token) sdk.Coin {
 	coin := amount.GravityCoin()
 	vouchers := sdk.Coins{coin}
-	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, vouchers)
+	err := k.BankKeeper.MintCoins(ctx, gravitytypes.ModuleName, vouchers)
 	require.NoError(t, err)
-	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, dest, vouchers)
+	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, gravitytypes.ModuleName, dest, vouchers)
 	require.NoError(t, err)
 	return coin
 }
