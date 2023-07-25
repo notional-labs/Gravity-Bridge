@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -57,10 +56,4 @@ func InitGravityTestApp(initChain bool) *Gravity {
 	}
 
 	return app
-}
-
-// Initializes a new Stride App casted as a TestingApp for IBC support
-func InitStrideIBCTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	app := InitGravityTestApp(false)
-	return app, NewDefaultGenesisState()
 }
