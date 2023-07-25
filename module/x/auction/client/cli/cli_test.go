@@ -27,7 +27,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = app.DefaultConfig()
 
-	// modification to pay fee with test bond denom "stake"
 	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
 
 	s.cfg.GenesisState = genesisState
@@ -45,6 +44,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+	s.SetupSuite()
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -79,6 +79,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdAuctionPeriods() {
+	s.SetupSuite()
 	val := s.network.Validators[0]
 	id := "1"
 
@@ -109,6 +110,7 @@ func (s *IntegrationTestSuite) TestGetCmdAuctionPeriods() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdAuction() {
+	s.SetupSuite()
 	val := s.network.Validators[0]
 	auction_id := "1"
 	period_id := "1"
@@ -139,6 +141,7 @@ func (s *IntegrationTestSuite) TestGetCmdAuction() {
 	}
 }
 func (s *IntegrationTestSuite) TestGetCmdAllAuction() {
+	s.SetupSuite()
 	val := s.network.Validators[0]
 	address := s.network.Validators[0].Address
 	period_id := "1"
@@ -170,6 +173,7 @@ func (s *IntegrationTestSuite) TestGetCmdAllAuction() {
 }
 
 func (s *IntegrationTestSuite) TestGetCmdHighestBid() {
+	s.SetupSuite()
 	val := s.network.Validators[0]
 	auction_id := "1"
 	period_id := "1"
