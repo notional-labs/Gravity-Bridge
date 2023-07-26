@@ -25,7 +25,7 @@ func SetupConfig() {
 
 }
 
-// Initializes a new StrideApp without IBC functionality
+// Initializes a new GravityApp without IBC functionality
 func InitGravityTestApp(initChain bool) *Gravity {
 	db := dbm.NewMemDB()
 	app := NewGravityApp(

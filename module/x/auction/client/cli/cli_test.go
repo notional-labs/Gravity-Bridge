@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -83,6 +84,11 @@ func (s *IntegrationTestSuite) TestGetCmdAuctionPeriods() {
 	val := s.network.Validators[0]
 	id := "1"
 
+	//because when 30 epochs in beginblock will automatically startMewAuctionPeriod,
+	//  defau params.AuctionEpoch=10.So we will have more than 2 AuctionPeriodId
+	_, err := s.network.WaitForHeightWithTimeout(30, 20*time.Second)
+	s.Require().NoError(err)
+
 	testCases := []struct {
 		name           string
 		args           []string
@@ -115,6 +121,11 @@ func (s *IntegrationTestSuite) TestGetCmdAuction() {
 	auction_id := "1"
 	period_id := "1"
 
+	//because when 30 epochs in beginblock will automatically startMewAuctionPeriod,
+	//  defau params.AuctionEpoch=10.So we will have more than 2 AuctionPeriodId
+	_, err := s.network.WaitForHeightWithTimeout(30, 20*time.Second)
+	s.Require().NoError(err)
+
 	testCases := []struct {
 		name           string
 		args           []string
@@ -145,6 +156,11 @@ func (s *IntegrationTestSuite) TestGetCmdAllAuction() {
 	val := s.network.Validators[0]
 	address := s.network.Validators[0].Address
 	period_id := "1"
+
+	//because when 30 epochs in beginblock will automatically startMewAuctionPeriod,
+	//  defau params.AuctionEpoch=10.So we will have more than 2 AuctionPeriodId
+	_, err := s.network.WaitForHeightWithTimeout(30, 20*time.Second)
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name           string
@@ -177,6 +193,11 @@ func (s *IntegrationTestSuite) TestGetCmdHighestBid() {
 	val := s.network.Validators[0]
 	auction_id := "1"
 	period_id := "1"
+
+	//because when 30 epochs in beginblock will automatically startMewAuctionPeriod,
+	//  defau params.AuctionEpoch=10.So we will have more than 2 AuctionPeriodId
+	_, err := s.network.WaitForHeightWithTimeout(30, 20*time.Second)
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name           string

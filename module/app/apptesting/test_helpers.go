@@ -25,7 +25,7 @@ type AppTestHelper struct {
 
 	IbcEnabled   bool
 	Coordinator  *ibctesting.Coordinator
-	StrideChain  *ibctesting.TestChain
+	GravityChain *ibctesting.TestChain
 	HostChain    *ibctesting.TestChain
 	TransferPath *ibctesting.Path
 
