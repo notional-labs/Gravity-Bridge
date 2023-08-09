@@ -33,7 +33,7 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 	}
 
 	// Check if bid amount is greater than min bid amount allow
-	if msg.Amount.Amount.Uint64() < params.MinBidAmount {
+	if msg.Amount.IsLT(sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(params.MinBidAmount))) {
 		return nil, types.ErrInvalidBidAmount
 	}
 
@@ -60,7 +60,7 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 	highestBid := currentAuction.HighestBid
 
 	// If highest bid exist need to check the bid gap
-	if highestBid != nil && (msg.Amount.Sub(*highestBid.BidAmount)).Amount.Uint64() < params.BidGap {
+	if highestBid != nil && (msg.Amount.Sub(*highestBid.BidAmount)).IsLT(sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(params.BidGap))) {
 		return nil, types.ErrInvalidBidAmountGap
 	}
 
