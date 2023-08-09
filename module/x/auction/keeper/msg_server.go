@@ -32,6 +32,7 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 		return nil, sdkerrors.Wrap(err, "Key not valid")
 	}
 
+	// Check if bid amount is greater than min bid amount allow
 	if msg.Amount.Amount.Uint64() < params.MinBidAmount {
 		return nil, types.ErrInvalidBidAmount
 	}
@@ -45,6 +46,11 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 	latestAuctionPeriod, found := k.GetLatestAuctionPeriod(sdkCtx)
 	if !found {
 		return nil, types.ErrNoPreviousAuctionPeriod
+	}
+
+	// check if an auction periods is occuring
+	if latestAuctionPeriod.StartBlockHeight > uint64(sdkCtx.BlockHeight()) {
+		return nil, fmt.Errorf("Cannot submit bid for Auction Periods that is not occuring")
 	}
 
 	currentAuction, found := k.GetAuctionByPeriodIDAndAuctionId(sdkCtx, latestAuctionPeriod.Id, msg.AuctionId)

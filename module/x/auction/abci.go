@@ -192,18 +192,18 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak type
 func EndBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) {
 	params := k.GetParams(ctx)
 
-	lastAuctionPeriods, found := k.GetLatestAuctionPeriod(ctx)
+	lastestAuctionPeriods, found := k.GetLatestAuctionPeriod(ctx)
 	if !found {
 		return
 	}
 
 	// Process bid entries during the duration of the auction period
-	if lastAuctionPeriods.EndBlockHeight >= uint64(ctx.BlockHeight()) && lastAuctionPeriods.StartBlockHeight <= uint64(ctx.BlockHeight()) {
-		processBidEntries(ctx, params, k, *lastAuctionPeriods)
+	if lastestAuctionPeriods.EndBlockHeight >= uint64(ctx.BlockHeight()) && lastestAuctionPeriods.StartBlockHeight <= uint64(ctx.BlockHeight()) {
+		processBidEntries(ctx, params, k, *lastestAuctionPeriods)
 	}
 
-	if lastAuctionPeriods.EndBlockHeight == uint64(ctx.BlockHeight()) {
-		err := endAuctionPeriod(ctx, params, *lastAuctionPeriods, k, bk, ak)
+	if lastestAuctionPeriods.EndBlockHeight == uint64(ctx.BlockHeight()) {
+		err := endAuctionPeriod(ctx, params, *lastestAuctionPeriods, k, bk, ak)
 		if err != nil {
 			return
 		}
