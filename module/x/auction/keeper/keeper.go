@@ -68,7 +68,7 @@ func (k Keeper) SetParams(ctx sdk.Context, ps types.Params) {
 // make use of the tokens which would otherwise be lost
 func (k Keeper) SendToCommunityPool(ctx sdk.Context, coins sdk.Coins) error {
 	if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, distrtypes.ModuleName, coins); err != nil {
-		return sdkerrors.Wrap(err, "transfer to community pool failed")
+		return sdkerrors.Wrap(err, "Fail to transfer token to community pool")
 	}
 	feePool := k.DistKeeper.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(coins...)...)
@@ -77,8 +77,9 @@ func (k Keeper) SendToCommunityPool(ctx sdk.Context, coins sdk.Coins) error {
 }
 
 func (k Keeper) SendFromCommunityPool(ctx sdk.Context, coins sdk.Coins) error {
-	if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, distrtypes.ModuleName, types.ModuleName, coins); err != nil {
-		return sdkerrors.Wrap(err, "transfer to auction module failed")
+	err := k.DistKeeper.DistributeFromFeePool(ctx, coins, k.AccountKeeper.GetModuleAddress(types.ModuleName))
+	if err != nil {
+		return sdkerrors.Wrap(err, "Fail to transfer token to auction module")
 	}
 	return nil
 }
