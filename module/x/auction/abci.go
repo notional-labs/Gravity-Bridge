@@ -111,11 +111,11 @@ func processBidEntries(
 	params types.Params,
 	k keeper.Keeper,
 	latestAuctionPeriod types.AuctionPeriod,
-) error {
+) {
 	for _, auction := range k.GetAllAuctionsByPeriodID(ctx, latestAuctionPeriod.Id) {
 		bidsQueue, found := k.GetBidsQueue(ctx, auction.Id)
 		if !found {
-			return fmt.Errorf("Bids queue for auction with id %v", auction.Id)
+			continue
 		}
 
 		oldHighestBid := auction.HighestBid
@@ -154,8 +154,6 @@ func processBidEntries(
 		// Update the new bid entry
 		k.UpdateAuctionNewBid(ctx, newHighestBid.AuctionId, newHighestBid)
 	}
-
-	return nil
 }
 
 func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue, highestBid types.Bid) (bid types.Bid, found bool) {

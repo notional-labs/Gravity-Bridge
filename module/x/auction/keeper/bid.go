@@ -32,12 +32,10 @@ func (k Keeper) CreateNewBidQueue(ctx sdk.Context, autionId uint64) {
 	k.SetBidsQueue(ctx, bidQueue, autionId)
 }
 
-func (k Keeper) AddBidToQueue(ctx sdk.Context, bid types.Bid, bidsQueue *types.BidsQueue) error {
+func (k Keeper) AddBidToQueue(ctx sdk.Context, bid types.Bid, bidsQueue *types.BidsQueue) {
 	bidsQueue.Queue = append(bidsQueue.Queue, &bid)
 
 	k.SetBidsQueue(ctx, *bidsQueue, bid.AuctionId)
-
-	return nil
 }
 
 func (k Keeper) ClearQueue(ctx sdk.Context, auctionId uint64) {
