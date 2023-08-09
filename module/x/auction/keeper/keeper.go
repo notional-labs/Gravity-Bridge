@@ -9,6 +9,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +24,7 @@ type Keeper struct {
 	BankKeeper    *bankkeeper.BaseKeeper
 	AccountKeeper *authkeeper.AccountKeeper
 	DistKeeper    *distrkeeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
 }
 
 func NewKeeper(
