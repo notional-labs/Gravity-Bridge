@@ -1,6 +1,8 @@
 package auction
 
 import (
+	"fmt"
+
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/keeper"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"
 
@@ -56,6 +58,8 @@ func startMewAuctionPeriod(ctx sdk.Context, params types.Params, k keeper.Keeper
 		if err != nil {
 			return err
 		}
+
+		k.CreateNewBidQueue(ctx, newId)
 	}
 
 	k.SetEstimateAuctionPeriodBlockHeight(ctx, uint64(ctx.BlockHeight())+params.AuctionEpoch)
@@ -86,6 +90,9 @@ func endAuctionPeriod(
 		if err != nil {
 			panic(err)
 		}
+
+		// Delete the bid queue when the auction period has ended
+		k.ClearQueue(ctx, auction.Id)
 	}
 
 	balances := bk.GetAllBalances(ctx, ak.GetModuleAccount(ctx, types.ModuleName).GetAddress())
@@ -115,6 +122,76 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak type
 	}
 }
 
+// Go through all bid entries of auctions
+// get the bid with highest amount and lock token from respective bidder
+// and return lock token to bidder if someone bid a higher amount
+func processBidEntries(
+	ctx sdk.Context,
+	params types.Params,
+	k keeper.Keeper,
+	latestAuctionPeriod types.AuctionPeriod,
+) error {
+	for _, auction := range k.GetAllAuctionsByPeriodID(ctx, latestAuctionPeriod.Id) {
+		bidsQueue, found := k.GetBidsQueue(ctx, auction.Id)
+		if !found {
+			return fmt.Errorf("Bids queue for auction with id %v", auction.Id)
+		}
+
+		oldHighestBid := auction.HighestBid
+
+		newHighestBid, found := findHighestBid(ctx, bidsQueue, *oldHighestBid)
+		if !found {
+			continue
+		}
+
+		// Check bid amount gap
+		if (newHighestBid.BidAmount.Sub(*oldHighestBid.BidAmount)).Amount.Uint64() < params.BidGap {
+			continue
+		}
+
+		if oldHighestBid.BidderAddress == newHighestBid.BidderAddress {
+			bidAmountGap := newHighestBid.BidAmount.Sub(*oldHighestBid.BidAmount)
+			// Send the added amount to auction module
+			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, bidAmountGap)
+			if err != nil {
+				panic(fmt.Sprintf("fail to lock bid token from address %s", newHighestBid.BidderAddress))
+			}
+		} else {
+			// Return fund to the pervious highest bidder
+			err := k.ReturnPrevioudBidAmount(ctx, oldHighestBid.BidderAddress, *oldHighestBid.BidAmount)
+			if err != nil {
+				panic(fmt.Sprintf("fail to return lock token to address %s", oldHighestBid.BidderAddress))
+			}
+
+			err = k.LockBidAmount(ctx, newHighestBid.BidderAddress, *newHighestBid.BidAmount)
+			if err != nil {
+				panic(fmt.Sprintf("fail to lock bid token from address %s", newHighestBid.BidderAddress))
+			}
+
+		}
+
+		// Update the new bid entry
+		k.UpdateAuctionNewBid(ctx, newHighestBid.AuctionId, newHighestBid)
+	}
+
+	return nil
+}
+
+func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue, highestBid types.Bid) (bid types.Bid, found bool) {
+	// Set initial highest bidd
+	newHighestBid := highestBid
+	found = false
+
+	for _, bid := range bidsQueue.Queue {
+		if !bid.BidAmount.IsLT(*newHighestBid.BidAmount) {
+			newHighestBid = *bid
+			found = true
+		}
+	}
+
+	return newHighestBid, found
+}
+
 func EndBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) {
 	params := k.GetParams(ctx)
 
@@ -123,6 +200,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.
 	if !found {
 		return
 	}
+
+	processBidEntries(ctx, params, k, *lastAuctionPeriods)
 
 	if lastAuctionPeriods.EndBlockHeight == params.AuctionPeriod {
 		err := endAuctionPeriod(ctx, params, *lastAuctionPeriods, k, bk, ak)

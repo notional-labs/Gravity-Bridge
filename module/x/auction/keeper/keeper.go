@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -79,4 +81,22 @@ func (k Keeper) SendFromCommunityPool(ctx sdk.Context, coins sdk.Coins) error {
 		return sdkerrors.Wrap(err, "transfer to auction module failed")
 	}
 	return nil
+}
+
+func (k Keeper) ReturnPrevioudBidAmount(ctx sdk.Context, recipient string, amount sdk.Coin) error {
+	sdkAcc, err := sdk.AccAddressFromBech32(recipient)
+	if err != nil {
+		return fmt.Errorf("Unable to get account from Bech32 address: %s", err.Error())
+	}
+	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdkAcc, sdk.NewCoins(amount))
+	return err
+}
+
+func (k Keeper) LockBidAmount(ctx sdk.Context, sender string, amount sdk.Coin) error {
+	sdkAcc, err := sdk.AccAddressFromBech32(sender)
+	if err != nil {
+		return fmt.Errorf("Unable to get account from Bech32 address: %s", err.Error())
+	}
+	err = k.BankKeeper.SendCoinsFromAccountToModule(ctx, sdkAcc, types.ModuleName, sdk.NewCoins(amount))
+	return err
 }
