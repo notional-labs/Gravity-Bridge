@@ -119,14 +119,12 @@ func processBidEntries(
 		}
 
 		oldHighestBid := auction.HighestBid
-
-		newHighestBid, found := findHighestBid(ctx, bidsQueue, *oldHighestBid)
-		if !found {
+		if oldHighestBid == nil {
 			continue
 		}
 
-		// Check bid amount gap
-		if (newHighestBid.BidAmount.Sub(*oldHighestBid.BidAmount)).Amount.Uint64() < params.BidGap {
+		newHighestBid, found := findHighestBid(ctx, bidsQueue, *oldHighestBid)
+		if !found {
 			continue
 		}
 
