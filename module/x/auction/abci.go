@@ -62,8 +62,6 @@ func startMewAuctionPeriod(ctx sdk.Context, params types.Params, k keeper.Keeper
 		k.CreateNewBidQueue(ctx, newId)
 	}
 
-	k.SetEstimateAuctionPeriodBlockHeight(ctx, uint64(ctx.BlockHeight())+params.AuctionEpoch)
-
 	return nil
 
 }
@@ -103,23 +101,6 @@ func endAuctionPeriod(
 		panic(err)
 	}
 	return nil
-}
-
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) {
-	params := k.GetParams(ctx)
-
-	// An initial estimateNextBlockHeight need to be set as a starting point
-	estimateNextBlockHeight, found := k.GetEstimateAuctionPeriodBlockHeight(ctx)
-	if !found {
-		return
-	}
-
-	if uint64(ctx.BlockHeight()) == estimateNextBlockHeight.Height {
-		err := startMewAuctionPeriod(ctx, params, k, bk, ak)
-		if err != nil {
-			return
-		}
-	}
 }
 
 // Go through all bid entries of auctions
@@ -192,10 +173,29 @@ func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue, highestBid types
 	return newHighestBid, found
 }
 
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) {
+	params := k.GetParams(ctx)
+
+	// An initial estimateNextBlockHeight need to be set as a starting point
+	estimateNextBlockHeight, found := k.GetEstimateAuctionPeriodBlockHeight(ctx)
+	if !found {
+		panic("Cannot find estimate block height for this auction period")
+	}
+
+	if uint64(ctx.BlockHeight()) == estimateNextBlockHeight.Height {
+		// Set estimate block height for next auction periods
+		k.SetEstimateAuctionPeriodBlockHeight(ctx, uint64(ctx.BlockHeight())+params.AuctionEpoch)
+
+		err := startMewAuctionPeriod(ctx, params, k, bk, ak)
+		if err != nil {
+			return
+		}
+	}
+}
+
 func EndBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) {
 	params := k.GetParams(ctx)
 
-	// An initial auction period need to be set as a starting point
 	lastAuctionPeriods, found := k.GetLatestAuctionPeriod(ctx)
 	if !found {
 		return
