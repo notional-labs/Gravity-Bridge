@@ -22,7 +22,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// Bid msg add a bid entry to the queue to be process by the end of each block
+// Bid msg add a bid entry to the queue to be processed by the end of each block
 func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBidResponse, err error) {
 	err = msg.ValidateBasic()
 
@@ -37,7 +37,7 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 		return nil, fmt.Errorf("Invalid denom %s should be %s", msg.Amount.Denom, k.StakingKeeper.BondDenom(sdkCtx))
 	}
 
-	// Check if bid amount is greater than min bid amount allow
+	// Check if bid amount is greater than min bid amount allowed
 	if msg.Amount.IsLT(sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(params.MinBidAmount))) {
 		return nil, types.ErrInvalidBidAmount
 	}
@@ -54,7 +54,7 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 	}
 
 	// check if an auction periods is occuring
-	if latestAuctionPeriod.StartBlockHeight > uint64(sdkCtx.BlockHeight()) {
+	if latestAuctionPeriod.EndBlockHeight < uint64(sdkCtx.BlockHeight()) {
 		return nil, fmt.Errorf("Cannot submit bid for Auction Periods that is not occuring")
 	}
 
