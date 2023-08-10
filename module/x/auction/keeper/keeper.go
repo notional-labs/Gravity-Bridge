@@ -34,6 +34,7 @@ func NewKeeper(
 	bankKeeper *bankkeeper.BaseKeeper,
 	accKeeper *authkeeper.AccountKeeper,
 	distKeeper *distrkeeper.Keeper,
+	stakingKeeper *stakingkeeper.Keeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -47,6 +48,7 @@ func NewKeeper(
 		BankKeeper:    bankKeeper,
 		AccountKeeper: accKeeper,
 		DistKeeper:    distKeeper,
+		StakingKeeper: stakingKeeper,
 	}
 	return k
 }
