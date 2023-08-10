@@ -55,7 +55,7 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 
 	// check if an auction periods is occuring
 	if latestAuctionPeriod.EndBlockHeight < uint64(sdkCtx.BlockHeight()) {
-		return nil, fmt.Errorf("Cannot submit bid for Auction Periods that is not occuring")
+		return nil, fmt.Errorf("Cannot submit bid for Auction Periods that is had passed")
 	}
 
 	currentAuction, found := k.GetAuctionByPeriodIDAndAuctionId(sdkCtx, latestAuctionPeriod.Id, msg.AuctionId)

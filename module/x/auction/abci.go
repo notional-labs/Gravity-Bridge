@@ -75,6 +75,11 @@ func endAuctionPeriod(
 	ak types.AccountKeeper,
 ) error {
 	for _, auction := range k.GetAllAuctionsByPeriodID(ctx, latestAuctionPeriod.Id) {
+		// Update auction status to finished
+		auction.Status = 2
+		k.SetAuction(ctx, auction)
+
+		// If no bid return fund back to community pool
 		if auction.HighestBid == nil {
 			err := k.SendToCommunityPool(ctx, sdk.Coins{*auction.AuctionAmount})
 			if err != nil {
@@ -118,45 +123,67 @@ func processBidEntries(
 			continue
 		}
 
+		// Get new highest bid from bids queue
+		// TODO: Need find better way to implement this
 		oldHighestBid := auction.HighestBid
+		var newHighestBid types.Bid
 		if oldHighestBid == nil {
-			continue
+			newHighestBid, found = findHighestBid(ctx, bidsQueue)
+			if !found {
+				continue
+			}
+		} else {
+			newHighestBid, found = findHighestBidCompareWithOldHighestBid(ctx, bidsQueue, *oldHighestBid)
+			if !found {
+				continue
+			}
 		}
 
-		newHighestBid, found := findHighestBid(ctx, bidsQueue, *oldHighestBid)
-		if !found {
-			continue
-		}
-
-		if oldHighestBid.BidderAddress == newHighestBid.BidderAddress {
+		if oldHighestBid != nil && oldHighestBid.BidderAddress == newHighestBid.BidderAddress {
 			bidAmountGap := newHighestBid.BidAmount.Sub(*oldHighestBid.BidAmount)
 			// Send the added amount to auction module
 			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, bidAmountGap)
 			if err != nil {
-				panic(fmt.Sprintf("fail to lock bid token from address %s", newHighestBid.BidderAddress))
+				panic(fmt.Sprintf("Fail to lock bid token from address %s", newHighestBid.BidderAddress))
 			}
 		} else {
 			// Return fund to the pervious highest bidder
 			err := k.ReturnPrevioudBidAmount(ctx, oldHighestBid.BidderAddress, *oldHighestBid.BidAmount)
 			if err != nil {
-				panic(fmt.Sprintf("fail to return lock token to address %s", oldHighestBid.BidderAddress))
+				panic(fmt.Sprintf("Fail to return lock token to address %s", oldHighestBid.BidderAddress))
 			}
 
 			err = k.LockBidAmount(ctx, newHighestBid.BidderAddress, *newHighestBid.BidAmount)
 			if err != nil {
-				panic(fmt.Sprintf("fail to lock bid token from address %s", newHighestBid.BidderAddress))
+				panic(fmt.Sprintf("Fail to lock bid token from address %s", newHighestBid.BidderAddress))
 			}
 
 		}
+		auction.HighestBid = &newHighestBid
 
-		// Update the new bid entry
-		k.UpdateAuctionNewBid(ctx, newHighestBid.AuctionId, newHighestBid)
+		// Update the new highest bid entry
+		k.SetAuction(ctx, auction)
 	}
 }
 
-func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue, highestBid types.Bid) (bid types.Bid, found bool) {
-	// Set initial highest bidd
+func findHighestBidCompareWithOldHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue, highestBid types.Bid) (bid types.Bid, found bool) {
+	// Set initial highest bid
 	newHighestBid := highestBid
+	found = false
+
+	for _, bid := range bidsQueue.Queue {
+		if !bid.BidAmount.IsLT(*newHighestBid.BidAmount) {
+			newHighestBid = *bid
+			found = true
+		}
+	}
+
+	return newHighestBid, found
+}
+
+func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue) (bid types.Bid, found bool) {
+	// Set initial highest bid
+	newHighestBid := *bidsQueue.Queue[0]
 	found = false
 
 	for _, bid := range bidsQueue.Queue {
@@ -175,7 +202,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak type
 	// An initial estimateNextBlockHeight need to be set as a starting point
 	estimateNextBlockHeight, found := k.GetEstimateAuctionPeriodBlockHeight(ctx)
 	if !found {
-		panic("Cannot find estimate block height for this auction period")
+		panic("Cannot find estimate block height for next auction period")
 	}
 
 	if uint64(ctx.BlockHeight()) == estimateNextBlockHeight.Height {
