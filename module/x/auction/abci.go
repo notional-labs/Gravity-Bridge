@@ -124,10 +124,9 @@ func processBidEntries(
 		}
 
 		// Get new highest bid from bids queue
-		// TODO: Need find better way to implement this
 		oldHighestBid := auction.HighestBid
-		newHighestBid, found := findHighestBid(ctx, bidsQueue)
-		if !found {
+		newHighestBid := findHighestBid(ctx, bidsQueue)
+		if newHighestBid == nil {
 			continue
 		}
 
@@ -151,26 +150,27 @@ func processBidEntries(
 			}
 
 		}
-		auction.HighestBid = &newHighestBid
+		auction.HighestBid = newHighestBid
 
 		// Update the new highest bid entry
 		k.SetAuction(ctx, auction)
 	}
 }
 
-func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue) (bid types.Bid, found bool) {
+func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue) (bid *types.Bid) {
+	if len(bidsQueue.Queue) == 0 {
+		return nil
+	}
 	// Set initial highest bid
-	newHighestBid := *bidsQueue.Queue[0]
-	found = false
+	newHighestBid := bidsQueue.Queue[0]
 
 	for _, bid := range bidsQueue.Queue {
 		if !bid.BidAmount.IsLT(*newHighestBid.BidAmount) {
-			newHighestBid = *bid
-			found = true
+			newHighestBid = bid
 		}
 	}
 
-	return newHighestBid, found
+	return newHighestBid
 }
 
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) {
