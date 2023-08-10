@@ -126,17 +126,9 @@ func processBidEntries(
 		// Get new highest bid from bids queue
 		// TODO: Need find better way to implement this
 		oldHighestBid := auction.HighestBid
-		var newHighestBid types.Bid
-		if oldHighestBid == nil {
-			newHighestBid, found = findHighestBid(ctx, bidsQueue)
-			if !found {
-				continue
-			}
-		} else {
-			newHighestBid, found = findHighestBidCompareWithOldHighestBid(ctx, bidsQueue, *oldHighestBid)
-			if !found {
-				continue
-			}
+		newHighestBid, found := findHighestBid(ctx, bidsQueue)
+		if !found {
+			continue
 		}
 
 		if oldHighestBid != nil && oldHighestBid.BidderAddress == newHighestBid.BidderAddress {
@@ -164,21 +156,6 @@ func processBidEntries(
 		// Update the new highest bid entry
 		k.SetAuction(ctx, auction)
 	}
-}
-
-func findHighestBidCompareWithOldHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue, highestBid types.Bid) (bid types.Bid, found bool) {
-	// Set initial highest bid
-	newHighestBid := highestBid
-	found = false
-
-	for _, bid := range bidsQueue.Queue {
-		if !bid.BidAmount.IsLT(*newHighestBid.BidAmount) {
-			newHighestBid = *bid
-			found = true
-		}
-	}
-
-	return newHighestBid, found
 }
 
 func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue) (bid types.Bid, found bool) {
