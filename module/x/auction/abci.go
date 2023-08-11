@@ -130,26 +130,35 @@ func processBidEntries(
 			continue
 		}
 
-		if oldHighestBid != nil && oldHighestBid.BidderAddress == newHighestBid.BidderAddress {
-			bidAmountGap := newHighestBid.BidAmount.Sub(*oldHighestBid.BidAmount)
-			// Send the added amount to auction module
-			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, bidAmountGap)
-			if err != nil {
-				panic(fmt.Sprintf("Fail to lock bid token from address %s", newHighestBid.BidderAddress))
-			}
-		} else {
-			// Return fund to the pervious highest bidder
-			err := k.ReturnPrevioudBidAmount(ctx, oldHighestBid.BidderAddress, *oldHighestBid.BidAmount)
-			if err != nil {
-				panic(fmt.Sprintf("Fail to return lock token to address %s", oldHighestBid.BidderAddress))
+		if oldHighestBid != nil {
+			var lockAmount sdk.Coin
+			if oldHighestBid.BidderAddress == newHighestBid.BidderAddress {
+				// Lock amount is the addition from the previous lock amount
+				lockAmount = newHighestBid.BidAmount.Sub(*oldHighestBid.BidAmount)
+			} else {
+				lockAmount = *newHighestBid.BidAmount
 			}
 
-			err = k.LockBidAmount(ctx, newHighestBid.BidderAddress, *newHighestBid.BidAmount)
+			// Send to the auction module
+			//
+			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, lockAmount)
 			if err != nil {
-				panic(fmt.Sprintf("Fail to lock bid token from address %s", newHighestBid.BidderAddress))
+				continue
+			}
+
+			// Return fund to the pervious highest bidder
+			err = k.ReturnPrevioudBidAmount(ctx, oldHighestBid.BidderAddress, *oldHighestBid.BidAmount)
+			if err != nil {
+				panic(fmt.Sprintf("Fail to return token back to address %s", oldHighestBid.BidderAddress))
+			}
+		} else {
+			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, *newHighestBid.BidAmount)
+			if err != nil {
+				continue
 			}
 
 		}
+		// Only when token are lock that we register the new highest bid entry
 		auction.HighestBid = newHighestBid
 
 		// Update the new highest bid entry
