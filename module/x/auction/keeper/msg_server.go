@@ -37,6 +37,12 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 		return nil, fmt.Errorf("Invalid denom %s should be %s", msg.Amount.Denom, k.StakingKeeper.BondDenom(sdkCtx))
 	}
 
+	// Check if bidder has enough balance to submit a bid
+	bidderBalance := k.BankKeeper.GetBalance(sdkCtx, sdk.AccAddress(msg.Bidder), msg.Amount.Denom)
+	if bidderBalance.IsLT(*msg.Amount) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "Insurfficient balance, expect to have: %v instead have: %v", msg.Amount.Amount, bidderBalance.Amount)
+	}
+
 	// Check if bid amount is greater than min bid amount allowed
 	if msg.Amount.IsLT(sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(params.MinBidAmount))) {
 		return nil, types.ErrInvalidBidAmount
