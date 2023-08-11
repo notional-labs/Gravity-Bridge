@@ -140,9 +140,11 @@ func processBidEntries(
 			}
 
 			// Send to the auction module
-			//
 			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, lockAmount)
 			if err != nil {
+				// Continue instead of panic to prevent intentional token transfer from
+				// bidder account before the endblock process cause the LockBidAmount return
+				// an err for insufficient fund
 				continue
 			}
 
@@ -154,6 +156,9 @@ func processBidEntries(
 		} else {
 			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, *newHighestBid.BidAmount)
 			if err != nil {
+				// Continue instead of panic to prevent intentional token transfer from
+				// bidder account before the endblock process cause the LockBidAmount return
+				// an err for insufficient fund
 				continue
 			}
 
