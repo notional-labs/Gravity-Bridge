@@ -179,6 +179,7 @@ func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue) (bid *types.Bid)
 	newHighestBid := bidsQueue.Queue[0]
 
 	for _, bid := range bidsQueue.Queue {
+		// With 2 entries with the same amount, only accept the entry that are added first
 		if !bid.BidAmount.IsLT(*newHighestBid.BidAmount) && !bid.BidAmount.IsEqual(*newHighestBid.BidAmount) {
 			newHighestBid = bid
 		}
