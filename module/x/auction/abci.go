@@ -179,7 +179,7 @@ func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue) (bid *types.Bid)
 	newHighestBid := bidsQueue.Queue[0]
 
 	for _, bid := range bidsQueue.Queue {
-		if !bid.BidAmount.IsLT(*newHighestBid.BidAmount) {
+		if !bid.BidAmount.IsLT(*newHighestBid.BidAmount) && !bid.BidAmount.IsEqual(*newHighestBid.BidAmount) {
 			newHighestBid = bid
 		}
 	}
