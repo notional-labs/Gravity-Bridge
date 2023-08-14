@@ -52,11 +52,12 @@ func (suite *KeeperTestSuite) TestBeginBlockerAndEndBlockerAuction() {
 
 	// set a Auction finish (Auction has ended.)
 	CoinAuction := sdk.NewCoin("atomm", sdk.NewIntFromUint64(0))
-	auctionPeriod_Set := types.AuctionPeriod{Id: 1, StartBlockHeight: 0}
+	auctionPeriod_Set := types.AuctionPeriod{Id: 1, StartBlockHeight: 0, EndBlockHeight: 3}
 	auction_Set := types.Auction{
-		Id:              1,
-		AuctionAmount:   &CoinAuction,
-		Status:          types.AuctionStatus_AUCTION_STATUS_FINISH,
+		Id:            1,
+		AuctionAmount: &CoinAuction,
+		Status:        types.AuctionStatus_AUCTION_STATUS_FINISH,
+		// nolint: exhaustruct
 		HighestBid:      &types.Bid{AuctionId: 1, BidAmount: &CoinAuction},
 		AuctionPeriodId: auctionPeriod_Set.Id,
 	}
