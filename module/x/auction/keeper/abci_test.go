@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestBeginBlockerAndEndBlockerAuction() {
 	defaultAuctionPeriod := uint64(2)
 	defaultMinBidAmount := uint64(1000)
 	defaultBidGap := uint64(100)
-	auctionRate := sdk.NewDecWithPrec(2, 1) //20%
+	auctionRate := sdk.NewDecWithPrec(2, 1) // 20%
 	allowTokens := map[string]bool{
 		"atomm": true,
 	}
@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestBeginBlockerAndEndBlockerAuction() {
 	fmt.Printf("param: %v\n", params)
 	fmt.Printf("coin dist module:%v \n", coins_dist)
 
-	//set a Auction finish (Auction has ended.)
+	// set a Auction finish (Auction has ended.)
 	CoinAuction := sdk.NewCoin("atomm", sdk.NewIntFromUint64(0))
 	auctionPeriod_Set := types.AuctionPeriod{Id: 1, StartBlockHeight: 0}
 	auction_Set := types.Auction{
