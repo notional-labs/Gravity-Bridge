@@ -20,6 +20,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
+// nolint: exhaustruct
 var _ types.MsgServer = msgServer{}
 
 // Bid msg add a bid entry to the queue to be processed by the end of each block
@@ -106,5 +107,6 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 		}
 	}
 
+	// nolint: exhaustruct
 	return &types.MsgBidResponse{}, nil
 }

@@ -10,7 +10,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-func startMewAuctionPeriod(ctx sdk.Context, params types.Params, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) error {
+func startNewAuctionPeriod(ctx sdk.Context, params types.Params, k keeper.Keeper, bk types.BankKeeper, ak types.AccountKeeper) error {
 	auctionRate := params.AuctionRate
 
 	increamentId, err := k.IncreamentAuctionPeriodId(ctx)
@@ -201,7 +201,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak type
 		// Set estimate block height for next auction periods
 		k.SetEstimateAuctionPeriodBlockHeight(ctx, uint64(ctx.BlockHeight())+params.AuctionEpoch)
 
-		err := startMewAuctionPeriod(ctx, params, k, bk, ak)
+		err := startNewAuctionPeriod(ctx, params, k, bk, ak)
 		if err != nil {
 			return
 		}
