@@ -9,19 +9,6 @@ require (
 	github.com/evmos/ethermint v0.19.5 // Replaced
 )
 
-replace (
-	// Lock us into the v0.45 line
-	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.45.16
-
-	// Althea-net fork removes ibc-go v3 dep, tendermint->cometbft issue
-	github.com/evmos/ethermint => github.com/althea-net/ethermint v0.19.5
-
-	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
-
-	google.golang.org/grpc => google.golang.org/grpc v1.33.2
-)
 
 require (
 	github.com/ethereum/go-ethereum v1.10.19
@@ -183,4 +170,20 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
+)
+
+replace (
+	// Lock us into the v0.45 line
+	github.com/cosmos/cosmos-sdk => ./cosmos-sdk
+
+	// Althea-net fork removes ibc-go v3 dep, tendermint->cometbft issue
+	github.com/evmos/ethermint => github.com/althea-net/ethermint v0.19.5
+
+	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
+
+	google.golang.org/grpc => google.golang.org/grpc v1.33.2
+	
+	github.com/spf13/cobra => ./cobra-1.6.1
 )

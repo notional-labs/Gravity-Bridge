@@ -15,7 +15,7 @@ use crate::MINER_ADDRESS;
 use crate::MINER_PRIVATE_KEY;
 use crate::TOTAL_TIMEOUT;
 use clarity::abi::encode_call;
-use clarity::abi::AbiToken as Token;
+use clarity::abi::Token;
 use clarity::Address as EthAddress;
 use clarity::Address;
 use deep_space::Contact;
@@ -299,6 +299,7 @@ pub async fn send_to_cosmos_invalid(
             )
             .unwrap(),
             0u32.into(),
+            *MINER_ADDRESS,
             *MINER_PRIVATE_KEY,
             vec![SendTxOption::GasLimitMultiplier(3.0)],
         )
@@ -342,6 +343,7 @@ async fn deploy_invalid_erc20(
             )
             .unwrap(),
             0u32.into(),
+            *MINER_ADDRESS,
             *MINER_PRIVATE_KEY,
             vec![SendTxOption::GasPriceMultiplier(2.0)],
         )

@@ -139,7 +139,7 @@ async fn relay_valid_valset(
     .await;
 
     if should_relay {
-        let res = send_eth_valset_update(
+        let _res = send_eth_valset_update(
             valset_to_relay,
             current_valset,
             &conformations,
@@ -150,9 +150,6 @@ async fn relay_valid_valset(
             ethereum_key,
         )
         .await;
-        if let Err(e) = res {
-            error!("Failed to relay validator set with {:?}", e);
-        }
     }
 }
 

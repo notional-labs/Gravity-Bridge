@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -54,29 +55,12 @@ func (k Keeper) SetAuctionPeriod(ctx sdk.Context, auctionPeriod types.AuctionPer
 	store.Set(uint64ToBytes(auctionPeriod.Id), bz)
 }
 
-// UpdateAuctionPeriod updates the auction period with the given id with the given auction.
-func (k Keeper) UpdateAuctionPeriod(ctx sdk.Context, id uint64, auction types.Auction) bool {
-	auctionPeriod, found := k.GetAuctionPeriodByID(ctx, id)
+func (k Keeper) IncreamentAuctionPeriodId(ctx sdk.Context) (uint64, error) {
+	lastAuctionPeriod, found := k.GetLatestAuctionPeriod(ctx)
 	if !found {
-		return false
+		return 0, fmt.Errorf("An initial auction period must be set during upgrade handler")
 	}
-
-	auctionPeriod.Auctions = append(auctionPeriod.Auctions, &auction)
-	k.SetAuctionPeriod(ctx, auctionPeriod)
-	return true
-}
-
-// GetAllAuctionsByPeriodID returns all auctions for the given auction period id.
-func (k Keeper) GetAllAuctionsByPeriodID(ctx sdk.Context, id uint64) ([]types.Auction, bool) {
-	auctionPeriod, found := k.GetAuctionPeriodByID(ctx, id)
-	if !found {
-		return nil, false
-	}
-	auctions := make([]types.Auction, len(auctionPeriod.Auctions))
-	for i, auction := range auctionPeriod.Auctions {
-		auctions[i] = *auction
-	}
-	return auctions, true
+	return lastAuctionPeriod.Id + 1, nil
 }
 
 // Helper function to convert uint64 to bytes.
@@ -84,4 +68,50 @@ func uint64ToBytes(i uint64) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, i)
 	return b
+}
+
+// SetLastAuctionPeriodBlockHeight sets the block height for given height.
+func (k Keeper) SetLastAuctionPeriodBlockHeight(ctx sdk.Context, blockHeight uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixLastAuctionPeriodBlockHeight))
+
+	lastBlockHeight := types.LastAuctionPeriodHeight{
+		Height: blockHeight,
+	}
+
+	bz := k.cdc.MustMarshal(&lastBlockHeight)
+	store.Set([]byte(types.KeyAuctionPeriodBlockHeight), bz)
+}
+
+// SetLastAuctionPeriodBlockHeight sets the block height for given height.
+func (k Keeper) SetEstimateAuctionPeriodBlockHeight(ctx sdk.Context, blockHeight uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixEstimateNextAuctionPeriodBlockHeight))
+
+	nextBlockHeight := types.EstimateNextAuctionPeriodHeight{
+		Height: blockHeight,
+	}
+
+	bz := k.cdc.MustMarshal(&nextBlockHeight)
+	store.Set([]byte(types.KeyAuctionPeriodBlockHeight), bz)
+}
+
+func (k Keeper) GetEstimateAuctionPeriodBlockHeight(ctx sdk.Context) (blockHeight types.EstimateNextAuctionPeriodHeight, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixEstimateNextAuctionPeriodBlockHeight))
+	bz := store.Get([]byte(types.KeyAuctionPeriodBlockHeight))
+	if bz == nil {
+		return blockHeight, false
+	}
+
+	k.cdc.MustUnmarshal(bz, &blockHeight)
+	return blockHeight, true
+}
+
+func (k Keeper) GetLastAuctionPeriodBlockHeight(ctx sdk.Context) (blockHeight types.LastAuctionPeriodHeight, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixLastAuctionPeriodBlockHeight))
+	bz := store.Get([]byte(types.KeyAuctionPeriodBlockHeight))
+	if bz == nil {
+		return blockHeight, false
+	}
+
+	k.cdc.MustUnmarshal(bz, &blockHeight)
+	return blockHeight, true
 }

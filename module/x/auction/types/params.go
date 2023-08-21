@@ -15,13 +15,6 @@ const (
 	DefaultBidGap        uint64 = 100
 )
 
-var _ paramtypes.ParamSet = (*Params)(nil)
-
-// ParamKeyTable for auction module
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
-
 // Param store keys
 var (
 	KeyAuctionEpoch  = []byte("AuctionEpoch")
@@ -31,6 +24,14 @@ var (
 	KeyAuctionRate   = []byte("AuctionRate")
 	KeyAllowTokens   = []byte("AllowTokens")
 )
+
+var _ paramtypes.ParamSet = (*Params)(nil)
+
+// ParamKeyTable for auction module
+func ParamKeyTable() paramtypes.KeyTable {
+	// nolint: exhaustruct
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+}
 
 // NewParams creates a new Params object
 func NewParams(auctionEpoch uint64, auctionPeriod uint64, minBidAmount uint64, bidGap uint64, auctionRate sdk.Dec, allowTokens map[string]bool) Params {
@@ -57,7 +58,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMinBidAmount, &p.MinBidAmount, isPositive),
 		paramtypes.NewParamSetPair(KeyBidGap, &p.BidGap, isPositive),
 		paramtypes.NewParamSetPair(KeyAuctionRate, &p.AuctionRate, isDecPositive),
-		paramtypes.NewParamSetPair(KeyAllowTokens, &p.AllowTokens, nil),
+		paramtypes.NewParamSetPair(KeyAllowTokens, &p.AllowTokens, isEmpty),
 	}
 }
 
@@ -78,6 +79,10 @@ func (p Params) Validate() error {
 	if p.AuctionRate.IsNegative() || p.AuctionRate.GT(sdk.NewDec(1)) {
 		return fmt.Errorf("auction rate should be between 0 and 1")
 	}
+	return nil
+}
+
+func isEmpty(i interface{}) error {
 	return nil
 }
 

@@ -3,7 +3,7 @@
 //! as the representation of this asset on Ethereum
 
 use clarity::{
-    abi::{encode_call, AbiToken as Token},
+    abi::{encode_call, Token},
     Uint256,
 };
 use clarity::{Address, PrivateKey};
@@ -26,6 +26,7 @@ pub async fn deploy_erc20(
     sender_secret: PrivateKey,
     options: Vec<SendTxOption>,
 ) -> Result<Uint256, GravityError> {
+    let sender_address = sender_secret.to_address();
     let tx_hash = web3
         .send_transaction(
             gravity_contract,
@@ -39,6 +40,7 @@ pub async fn deploy_erc20(
                 ],
             )?,
             0u32.into(),
+            sender_address,
             sender_secret,
             options,
         )

@@ -1,10 +1,9 @@
 use clarity::abi::encode_call;
 use clarity::Address as EthAddress;
 use clarity::Uint256;
-use clarity::{abi::AbiToken as Token, constants::zero_address};
+use clarity::{abi::Token, constants::zero_address};
 use gravity_utils::num_conversion::downcast_uint256;
 use gravity_utils::types::*;
-use web30::types::TransactionRequest;
 use web30::{client::Web3, jsonrpc::error::Web3Error};
 
 /// Gets the latest validator set nonce
@@ -14,8 +13,9 @@ pub async fn get_valset_nonce(
     web3: &Web3,
 ) -> Result<u64, Web3Error> {
     let payload = encode_call("state_lastValsetNonce()", &[]).unwrap();
-    let request = TransactionRequest::quick_tx(caller_address, contract_address, payload);
-    let val = web3.simulate_transaction(request, None).await?;
+    let val = web3
+        .simulate_transaction(contract_address, 0u8.into(), payload, caller_address, None)
+        .await?;
     // the go represents all nonces as u64, there's no
     // reason they should ever overflow without a user
     // submitting millions or tens of millions of dollars
@@ -33,8 +33,15 @@ pub async fn get_tx_batch_nonce(
     web3: &Web3,
 ) -> Result<u64, Web3Error> {
     let payload = encode_call("lastBatchNonce(address)", &[erc20_contract_address.into()]).unwrap();
-    let request = TransactionRequest::quick_tx(caller_address, gravity_contract_address, payload);
-    let val = web3.simulate_transaction(request, None).await?;
+    let val = web3
+        .simulate_transaction(
+            gravity_contract_address,
+            0u8.into(),
+            payload,
+            caller_address,
+            None,
+        )
+        .await?;
     // the go represents all nonces as u64, there's no
     // reason they should ever overflow without a user
     // submitting millions or tens of millions of dollars
@@ -56,8 +63,15 @@ pub async fn get_logic_call_nonce(
         &[Token::Bytes(invalidation_id)],
     )
     .unwrap();
-    let request = TransactionRequest::quick_tx(caller_address, gravity_contract_address, payload);
-    let val = web3.simulate_transaction(request, None).await?;
+    let val = web3
+        .simulate_transaction(
+            gravity_contract_address,
+            0u8.into(),
+            payload,
+            caller_address,
+            None,
+        )
+        .await?;
     // the go represents all nonces as u64, there's no
     // reason they should ever overflow without a user
     // submitting millions or tens of millions of dollars
@@ -74,8 +88,15 @@ pub async fn get_event_nonce(
     web3: &Web3,
 ) -> Result<u64, Web3Error> {
     let payload = encode_call("state_lastEventNonce()", &[]).unwrap();
-    let request = TransactionRequest::quick_tx(caller_address, gravity_contract_address, payload);
-    let val = web3.simulate_transaction(request, None).await?;
+    let val = web3
+        .simulate_transaction(
+            gravity_contract_address,
+            0u8.into(),
+            payload,
+            caller_address,
+            None,
+        )
+        .await?;
     // the go represents all nonces as u64, there's no
     // reason they should ever overflow without a user
     // submitting millions or tens of millions of dollars
@@ -92,8 +113,9 @@ pub async fn get_gravity_id(
     web3: &Web3,
 ) -> Result<String, Web3Error> {
     let payload = encode_call("state_gravityId()", &[]).unwrap();
-    let request = TransactionRequest::quick_tx(caller_address, contract_address, payload);
-    let val = web3.simulate_transaction(request, None).await?;
+    let val = web3
+        .simulate_transaction(contract_address, 0u8.into(), payload, caller_address, None)
+        .await?;
     let gravity_id = String::from_utf8(val);
     match gravity_id {
         Ok(val) => Ok(val),
@@ -110,8 +132,9 @@ pub async fn get_gravity_sol_address(
     web3: &Web3,
 ) -> Result<EthAddress, Web3Error> {
     let payload = encode_call("state_gravitySolAddress()", &[]).unwrap();
-    let request = TransactionRequest::quick_tx(caller_address, contract_address, payload);
-    let val = web3.simulate_transaction(request, None).await?;
+    let val = web3
+        .simulate_transaction(contract_address, 0u8.into(), payload, caller_address, None)
+        .await?;
 
     let mut data: [u8; 20] = Default::default();
     data.copy_from_slice(&val[12..]);
