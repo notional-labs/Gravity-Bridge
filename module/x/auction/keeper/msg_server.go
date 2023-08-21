@@ -39,7 +39,7 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 	}
 
 	// Check if bidder has enough balance to submit a bid
-	bidderBalance := k.BankKeeper.GetBalance(sdkCtx, sdk.AccAddress(msg.Bidder), msg.Amount.Denom)
+	bidderBalance := k.BankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Bidder), msg.Amount.Denom)
 	if bidderBalance.IsLT(*msg.Amount) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "Insurfficient balance, expect to have: %v instead have: %v", msg.Amount.Amount, bidderBalance.Amount)
 	}
