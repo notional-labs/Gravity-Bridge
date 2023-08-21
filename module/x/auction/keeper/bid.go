@@ -19,7 +19,7 @@ func (k Keeper) GetBidsQueue(ctx sdk.Context, auctionId uint64) (val types.BidsQ
 }
 
 func (k Keeper) SetBidsQueue(ctx sdk.Context, bidsQueue types.BidsQueue, autionId uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixAuctionPeriod))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixBidsQueue))
 
 	bz := k.cdc.MustMarshal(&bidsQueue)
 	store.Set(uint64ToBytes(autionId), bz)
