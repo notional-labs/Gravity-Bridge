@@ -71,11 +71,15 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 	}
 	highestBid := currentAuction.HighestBid
 
-	// If highest bid exist need to check the bid gap
-	if highestBid != nil &&
-		msg.Amount.IsGTE(*highestBid.BidAmount) &&
-		(msg.Amount.Sub(*highestBid.BidAmount)).IsLT(sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(params.BidGap))) {
-		return nil, types.ErrInvalidBidAmountGap
+	// If highest bid exist need to check the bid gap and bid amount is higher than previous highest bid amount
+	if highestBid != nil {
+		if msg.Amount.IsGTE(*highestBid.BidAmount) &&
+			(msg.Amount.Sub(*highestBid.BidAmount)).IsLT(sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(params.BidGap))) {
+			return nil, types.ErrInvalidBidAmountGap
+		}
+		if msg.Amount.IsLT(*highestBid.BidAmount) {
+			return nil, types.ErrInvalidBidAmount
+		}
 	}
 
 	if len(bidsQueue.Queue) == 0 {
