@@ -18,21 +18,21 @@ import (
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/app/apptesting"
 )
 
-type KeeperTestSuite struct {
+type TestSuite struct {
 	apptesting.AppTestHelper
 	suite.Suite
 }
 
 // Test helpers
-func (suite *KeeperTestSuite) SetupTest() {
+func (suite *TestSuite) SetupTest() {
 	suite.Setup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+	suite.Run(t, new(TestSuite))
 }
 
-func (suite *KeeperTestSuite) TestBeginBlockerAndEndBlockerAuction() {
+func (suite *TestSuite) TestBeginBlockerAndEndBlockerAuction() {
 	suite.SetupTest()
 	ctx := suite.Ctx
 	// params set
