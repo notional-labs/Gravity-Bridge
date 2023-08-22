@@ -1,4 +1,4 @@
-package keeper_test
+package auction_test
 
 import (
 	"fmt"
@@ -8,9 +8,29 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
+	"testing"
+
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction"
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/Gravity-Bridge/Gravity-Bridge/module/app/apptesting"
 )
+
+type KeeperTestSuite struct {
+	apptesting.AppTestHelper
+	suite.Suite
+}
+
+// Test helpers
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.Setup()
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
 func (suite *KeeperTestSuite) TestBeginBlockerAndEndBlockerAuction() {
 	suite.SetupTest()
