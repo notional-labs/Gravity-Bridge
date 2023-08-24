@@ -7,6 +7,7 @@ import (
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	"reflect"
 	"testing"
 
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction"
@@ -129,7 +130,6 @@ func (suite *TestSuite) TestBeginBlocker() {
 	testCases := map[string]struct {
 		ctxHeight             int64
 		expectPanic           bool
-		expectNewAuction      bool
 		expectAuction         types.Auction
 		previousAuctionPeriod *types.AuctionPeriod
 		communityBalances     sdk.Coins
@@ -145,20 +145,17 @@ func (suite *TestSuite) TestBeginBlocker() {
 		"Meet the next auction period, community pool has zero balances": {
 			ctxHeight:             5,
 			expectPanic:           false,
-			expectNewAuction:      false,
 			previousAuctionPeriod: &previousAuctionPeriod,
 		},
 		"Meet the next auction period, community pool balances truncate to zero": {
 			ctxHeight:             5,
 			expectPanic:           false,
-			expectNewAuction:      false,
 			previousAuctionPeriod: &previousAuctionPeriod,
 			communityBalances:     sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(4))),
 		},
 		"Meet the next auction period, create new auction period": {
-			ctxHeight:        5,
-			expectPanic:      false,
-			expectNewAuction: true,
+			ctxHeight:   5,
+			expectPanic: false,
 			expectAuction: types.Auction{
 				Id:              1,
 				AuctionAmount:   &expectAmount,
@@ -208,7 +205,7 @@ func (suite *TestSuite) TestBeginBlocker() {
 					auction.BeginBlocker(ctx, suite.App.GetAuctionKeeper(), suite.App.GetBankKeeper(), suite.App.GetAccountKeeper())
 				})
 				if tc.previousAuctionPeriod != nil {
-					if tc.expectNewAuction {
+					if !reflect.DeepEqual(tc.expectAuction, types.Auction{}) {
 						auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
 						// Should contain 1 aution for atom token
 						suite.Equal(len(auctions), 1)
