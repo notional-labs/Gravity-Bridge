@@ -124,18 +124,19 @@ func (suite *TestSuite) TestBeginBlockerAndEndBlockerAuction() {
 
 func (suite *TestSuite) TestBeginBlocker() {
 	previousAuctionPeriod := types.AuctionPeriod{Id: 1, StartBlockHeight: 0, EndBlockHeight: 4}
+	expectAmount := sdk.NewCoin("atom", sdk.NewInt(20_000_000))
 
 	testCases := map[string]struct {
 		ctxHeight             int64
 		expectPanic           bool
 		expectNewAuction      bool
+		expectAuction         types.Auction
 		previousAuctionPeriod *types.AuctionPeriod
 		communityBalances     sdk.Coins
 	}{
 		"Not meet the next auction period": {
-			ctxHeight:        4,
-			expectPanic:      false,
-			expectNewAuction: false,
+			ctxHeight:   4,
+			expectPanic: false,
 		},
 		"Meet the next auction period, no previous auction period": {
 			ctxHeight:   5,
@@ -155,9 +156,15 @@ func (suite *TestSuite) TestBeginBlocker() {
 			communityBalances:     sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(4))),
 		},
 		"Meet the next auction period, create new auction period": {
-			ctxHeight:             5,
-			expectPanic:           false,
-			expectNewAuction:      true,
+			ctxHeight:        5,
+			expectPanic:      false,
+			expectNewAuction: true,
+			expectAuction: types.Auction{
+				Id:              1,
+				AuctionAmount:   &expectAmount,
+				Status:          types.AuctionStatus_AUCTION_STATUS_IN_PROGRESS,
+				AuctionPeriodId: 2,
+			},
 			previousAuctionPeriod: &previousAuctionPeriod,
 			communityBalances:     sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100_000_000))),
 		},
@@ -205,6 +212,9 @@ func (suite *TestSuite) TestBeginBlocker() {
 						auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
 						// Should contain 1 aution for atom token
 						suite.Equal(len(auctions), 1)
+						auction := auctions[0]
+						suite.Equal(auction, tc.expectAuction)
+
 					} else {
 						auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
 						// Should not cotain any aution
