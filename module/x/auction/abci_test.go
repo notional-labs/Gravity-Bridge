@@ -148,13 +148,13 @@ func (suite *TestSuite) TestBeginBlocker() {
 			ctxHeight:             5,
 			expectPanic:           true,
 			previousAuctionPeriod: &previousAuctionPeriod,
-			communityBalances: sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(4))),
+			communityBalances:     sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(4))),
 		},
 		"Meet the next auction period, create new auction period": {
 			ctxHeight:             5,
 			expectPanic:           false,
 			previousAuctionPeriod: &previousAuctionPeriod,
-			communityBalances: sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100_000_000))),
+			communityBalances:     sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100_000_000))),
 		},
 	}
 
@@ -196,7 +196,7 @@ func (suite *TestSuite) TestBeginBlocker() {
 					auction.BeginBlocker(ctx, suite.App.GetAuctionKeeper(), suite.App.GetBankKeeper(), suite.App.GetAccountKeeper())
 				})
 				if tc.previousAuctionPeriod != nil {
-					auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id + 1)
+					auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
 					fmt.Println(auctions)
 				}
 			} else {
