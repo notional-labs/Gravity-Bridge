@@ -188,6 +188,7 @@ var (
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{
 		distrtypes.ModuleName: true,
+		auctiontypes.ModuleName: true,
 	}
 
 	// verify app interface at compile time
