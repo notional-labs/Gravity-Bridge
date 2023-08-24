@@ -128,12 +128,14 @@ func (suite *TestSuite) TestBeginBlocker() {
 	testCases := map[string]struct {
 		ctxHeight             int64
 		expectPanic           bool
+		expectNewAuction      bool
 		previousAuctionPeriod *types.AuctionPeriod
 		communityBalances     sdk.Coins
 	}{
 		"Not meet the next auction period": {
-			ctxHeight:   4,
-			expectPanic: false,
+			ctxHeight:        4,
+			expectPanic:      false,
+			expectNewAuction: false,
 		},
 		"Meet the next auction period, no previous auction period": {
 			ctxHeight:   5,
@@ -141,18 +143,21 @@ func (suite *TestSuite) TestBeginBlocker() {
 		},
 		"Meet the next auction period, community pool has zero balances": {
 			ctxHeight:             5,
-			expectPanic:           true,
+			expectPanic:           false,
+			expectNewAuction:      false,
 			previousAuctionPeriod: &previousAuctionPeriod,
 		},
 		"Meet the next auction period, community pool balances truncate to zero": {
 			ctxHeight:             5,
-			expectPanic:           true,
+			expectPanic:           false,
+			expectNewAuction:      false,
 			previousAuctionPeriod: &previousAuctionPeriod,
 			communityBalances:     sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(4))),
 		},
 		"Meet the next auction period, create new auction period": {
 			ctxHeight:             5,
 			expectPanic:           false,
+			expectNewAuction:      true,
 			previousAuctionPeriod: &previousAuctionPeriod,
 			communityBalances:     sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100_000_000))),
 		},
@@ -196,8 +201,15 @@ func (suite *TestSuite) TestBeginBlocker() {
 					auction.BeginBlocker(ctx, suite.App.GetAuctionKeeper(), suite.App.GetBankKeeper(), suite.App.GetAccountKeeper())
 				})
 				if tc.previousAuctionPeriod != nil {
-					auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
-					fmt.Println(auctions)
+					if tc.expectNewAuction {
+						auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
+						// Should contain 1 aution for atom token
+						suite.Equal(len(auctions), 1)
+					} else {
+						auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
+						// Should not cotain any aution
+						suite.Equal(len(auctions), 0)
+					}
 				}
 			} else {
 				suite.Require().Panics(func() {
