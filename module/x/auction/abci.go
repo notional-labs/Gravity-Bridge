@@ -60,7 +60,7 @@ func startNewAuctionPeriod(ctx sdk.Context, params types.Params, k keeper.Keeper
 		newAuction := types.Auction{
 			Id:              newId,
 			AuctionPeriodId: increamentId,
-			AuctionAmount:   &sdkcoin,
+			AuctionAmount:   sdkcoin,
 			Status:          1,
 			HighestBid:      nil,
 		}
@@ -91,17 +91,14 @@ func endAuctionPeriod(
 		auction.Status = 2
 		k.SetAuction(ctx, auction)
 
-		// If no bid return fund back to community pool
+		// If no bid continue
 		if auction.HighestBid == nil {
-			err := k.SendToCommunityPool(ctx, sdk.Coins{*auction.AuctionAmount})
-			if err != nil {
-				panic(err)
-			}
+			ctx.Logger().Info("No bid entry for this auction")
 			continue
 		}
 
 		// Send in the winning token to the highest bidder address
-		err := bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(auction.HighestBid.BidderAddress), sdk.Coins{*auction.AuctionAmount})
+		err := bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(auction.HighestBid.BidderAddress), sdk.Coins{auction.AuctionAmount})
 		if err != nil {
 			panic(err)
 		}
@@ -113,9 +110,9 @@ func endAuctionPeriod(
 	balances := bk.GetAllBalances(ctx, ak.GetModuleAccount(ctx, types.ModuleName).GetAddress())
 
 	// Empty the rest of the auction module balances back to community pool
-	err := k.SendFromCommunityPool(ctx, balances)
+	err := k.SendToCommunityPool(ctx, balances)
 	if err != nil {
-		panic(err)
+		ctx.Logger().Error("Fail to return fund to community pool, will try again in the end of the next auction period")
 	}
 	return nil
 }
@@ -148,9 +145,9 @@ func processBidEntries(
 			var lockAmount sdk.Coin
 			if oldHighestBid.BidderAddress == newHighestBid.BidderAddress {
 				// Lock amount is the addition from the previous lock amount
-				lockAmount = newHighestBid.BidAmount.Sub(*oldHighestBid.BidAmount)
+				lockAmount = newHighestBid.BidAmount.Sub(oldHighestBid.BidAmount)
 			} else {
-				lockAmount = *newHighestBid.BidAmount
+				lockAmount = newHighestBid.BidAmount
 			}
 
 			// Send to the auction module
@@ -164,12 +161,12 @@ func processBidEntries(
 			}
 
 			// Return fund to the pervious highest bidder
-			err = k.ReturnPrevioudBidAmount(ctx, oldHighestBid.BidderAddress, *oldHighestBid.BidAmount)
+			err = k.ReturnPrevioudBidAmount(ctx, oldHighestBid.BidderAddress, oldHighestBid.BidAmount)
 			if err != nil {
 				panic(fmt.Sprintf("Fail to return token back to address %s", oldHighestBid.BidderAddress))
 			}
 		} else {
-			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, *newHighestBid.BidAmount)
+			err := k.LockBidAmount(ctx, newHighestBid.BidderAddress, newHighestBid.BidAmount)
 			if err != nil {
 				// Continue instead of panic to prevent intentional token transfer from
 				// bidder account before the endblock process cause the LockBidAmount return
@@ -196,7 +193,7 @@ func findHighestBid(ctx sdk.Context, bidsQueue types.BidsQueue) (bid *types.Bid)
 
 	for _, bid := range bidsQueue.Queue {
 		// With 2 entries with the same amount, only accept the entry that are added first
-		if !bid.BidAmount.IsLT(*newHighestBid.BidAmount) && !bid.BidAmount.IsEqual(*newHighestBid.BidAmount) {
+		if !bid.BidAmount.IsLT(newHighestBid.BidAmount) && !bid.BidAmount.IsEqual(newHighestBid.BidAmount) {
 			newHighestBid = bid
 		}
 	}
