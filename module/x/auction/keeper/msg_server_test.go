@@ -34,11 +34,11 @@ func (suite *KeeperTestSuite) TestMsgBid() {
 	atomAuction := types.Auction{
 		Id:              1,
 		AuctionPeriodId: 1,
-		AuctionAmount:   &atomAmount,
+		AuctionAmount:   atomAmount,
 		Status:          1,
 		HighestBid:      &types.Bid{
 			AuctionId: 1,
-			BidAmount: &sdk.Coin{Denom: "stake", Amount: sdk.NewInt(100000)},
+			BidAmount: sdk.Coin{Denom: "stake", Amount: sdk.NewInt(100000)},
 		},
 	}
 	err := suite.App.GetAuctionKeeper().AddNewAuctionToAuctionPeriod(suite.Ctx, 1, atomAuction)
@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestMsgBid() {
 	osmoAuction := types.Auction{
 		Id:              2,
 		AuctionPeriodId: 1,
-		AuctionAmount:   &osmoAmount,
+		AuctionAmount:   osmoAmount,
 		Status:          1,
 		HighestBid:      nil,
 	}
