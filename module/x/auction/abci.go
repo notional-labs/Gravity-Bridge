@@ -30,8 +30,20 @@ func startNewAuctionPeriod(ctx sdk.Context, params types.Params, k keeper.Keeper
 	for token := range params.AllowTokens {
 		balance := bk.GetBalance(ctx, ak.GetModuleAccount(ctx, distrtypes.ModuleName).GetAddress(), token)
 
+		// For zero balance skip creation of auction for this token
+		if balance.IsZero() {
+			ctx.Logger().Info(fmt.Sprintf("Token with denom %s is empty in community pool", token))
+			continue
+		}
+
 		// Compute auction amount to send to auction module account
 		amount := sdk.NewDecFromInt(balance.Amount).Mul(auctionRate).TruncateInt()
+
+		// For zero amount skip creation of auction for this token
+		if amount.IsZero() {
+			ctx.Logger().Info(fmt.Sprintf("Auction amount with denom %s is empty", token))
+			continue
+		}
 
 		sdkcoin := sdk.NewCoin(token, amount)
 
@@ -79,12 +91,9 @@ func endAuctionPeriod(
 		auction.Status = 2
 		k.SetAuction(ctx, auction)
 
-		// If no bid return fund back to community pool
+		// If no bid continue
 		if auction.HighestBid == nil {
-			err := k.SendToCommunityPool(ctx, sdk.Coins{*auction.AuctionAmount})
-			if err != nil {
-				panic(err)
-			}
+			ctx.Logger().Info("No bid entry for this auction")
 			continue
 		}
 
@@ -101,9 +110,9 @@ func endAuctionPeriod(
 	balances := bk.GetAllBalances(ctx, ak.GetModuleAccount(ctx, types.ModuleName).GetAddress())
 
 	// Empty the rest of the auction module balances back to community pool
-	err := k.SendFromCommunityPool(ctx, balances)
+	err := k.SendToCommunityPool(ctx, balances)
 	if err != nil {
-		panic(err)
+		ctx.Logger().Error("Fail to return fund to community pool, will try again in the end of the next auction period")
 	}
 	return nil
 }
@@ -120,6 +129,7 @@ func processBidEntries(
 	for _, auction := range k.GetAllAuctionsByPeriodID(ctx, latestAuctionPeriod.Id) {
 		bidsQueue, found := k.GetBidsQueue(ctx, auction.Id)
 		if !found {
+			ctx.Logger().Info(fmt.Sprintf("Auction with Id: %v does not have a bids queue, intialization error", auction.Id))
 			continue
 		}
 
@@ -127,6 +137,7 @@ func processBidEntries(
 		oldHighestBid := auction.HighestBid
 		newHighestBid := findHighestBid(ctx, bidsQueue)
 		if newHighestBid == nil {
+			ctx.Logger().Info("Fail to find new highest bid")
 			continue
 		}
 
@@ -145,6 +156,7 @@ func processBidEntries(
 				// Continue instead of panic to prevent intentional token transfer from
 				// bidder account before the endblock process cause the LockBidAmount return
 				// an err for insufficient fund
+				ctx.Logger().Error(fmt.Sprintf("Fail to lock bid amount, check if account have insurfficient balance or check the error log for more detail: %s", err.Error()))
 				continue
 			}
 
@@ -159,6 +171,7 @@ func processBidEntries(
 				// Continue instead of panic to prevent intentional token transfer from
 				// bidder account before the endblock process cause the LockBidAmount return
 				// an err for insufficient fund
+				ctx.Logger().Error(fmt.Sprintf("Fail to lock bid amount, check if account have insurfficient balance or check the error log for more detail: %s", err.Error()))
 				continue
 			}
 
@@ -203,6 +216,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak type
 
 		err := startNewAuctionPeriod(ctx, params, k, bk, ak)
 		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Fail to initialize a new auction period at height %v, detail log: %s", ctx.BlockHeight(), err.Error()))
 			return
 		}
 	}
@@ -224,6 +238,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper, bk types.BankKeeper, ak types.
 	if lastestAuctionPeriods.EndBlockHeight == uint64(ctx.BlockHeight()) {
 		err := endAuctionPeriod(ctx, params, *lastestAuctionPeriods, k, bk, ak)
 		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Fail to end the current auction period at height %v, detail log: %s", ctx.BlockHeight(), err.Error()))
 			return
 		}
 	}

@@ -187,7 +187,8 @@ var (
 
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{
-		distrtypes.ModuleName: true,
+		distrtypes.ModuleName:   true,
+		auctiontypes.ModuleName: true,
 	}
 
 	// verify app interface at compile time
@@ -1070,7 +1071,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 func (app *Gravity) registerUpgradeHandlers() {
 	upgrades.RegisterUpgradeHandlers(
 		app.mm, app.configurator, app.accountKeeper, app.bankKeeper, app.bech32IbcKeeper, app.distrKeeper,
-		app.mintKeeper, app.stakingKeeper, app.upgradeKeeper, app.crisisKeeper, app.ibcTransferKeeper,
+		app.mintKeeper, app.stakingKeeper, app.upgradeKeeper, app.crisisKeeper, app.ibcTransferKeeper, app.autionKeeper,
 	)
 }
 
