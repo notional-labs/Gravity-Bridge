@@ -93,10 +93,7 @@ func endAuctionPeriod(
 
 		// If no bid return fund back to community pool
 		if auction.HighestBid == nil {
-			err := k.SendToCommunityPool(ctx, sdk.Coins{auction.AuctionAmount})
-			if err != nil {
-				panic(err)
-			}
+			ctx.Logger().Info("No bid entry for this auction")
 			continue
 		}
 
