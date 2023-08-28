@@ -13,5 +13,8 @@ enum ActionType{
 message UpdateAllowListProposal {
     string denom = 1;
     ActionType action_type = 2;
+
+    string title = 3;
+    string description = 4;
 }
 

@@ -8,10 +8,6 @@ const (
 	ProposalUpdateAllowList = "UpdateAllowList"
 )
 
-func (p *UpdateAllowListProposal) GetTitle() string { return p.Title }
-
-func (p *UpdateAllowListProposal) GetDescription() string { return p.Description }
-
 func (p *UpdateAllowListProposal) ProposalRoute() string { return RouterKey }
 
 func (p *UpdateAllowListProposal) ProposalType() string {
