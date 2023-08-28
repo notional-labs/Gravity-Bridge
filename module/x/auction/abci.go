@@ -91,12 +91,9 @@ func endAuctionPeriod(
 		auction.Status = 2
 		k.SetAuction(ctx, auction)
 
-		// If no bid return fund back to community pool
+		// If no bid continue
 		if auction.HighestBid == nil {
-			err := k.SendToCommunityPool(ctx, sdk.Coins{*auction.AuctionAmount})
-			if err != nil {
-				panic(err)
-			}
+			ctx.Logger().Info("No bid entry for this auction")
 			continue
 		}
 
@@ -113,9 +110,9 @@ func endAuctionPeriod(
 	balances := bk.GetAllBalances(ctx, ak.GetModuleAccount(ctx, types.ModuleName).GetAddress())
 
 	// Empty the rest of the auction module balances back to community pool
-	err := k.SendFromCommunityPool(ctx, balances)
+	err := k.SendToCommunityPool(ctx, balances)
 	if err != nil {
-		panic(err)
+		ctx.Logger().Error("Fail to return fund to community pool, will try again in the end of the next auction period")
 	}
 	return nil
 }
