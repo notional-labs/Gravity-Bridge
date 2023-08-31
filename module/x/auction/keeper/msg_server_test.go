@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestMsgBid() {
 		AuctionPeriodId: 1,
 		AuctionAmount:   atomAmount,
 		Status:          1,
-		HighestBid:      &types.Bid{
+		HighestBid: &types.Bid{
 			AuctionId: 1,
 			BidAmount: sdk.Coin{Denom: "stake", Amount: sdk.NewInt(100000)},
 		},

@@ -44,17 +44,7 @@ message Bid {
     string bidder_address = 3;  // Address of the bidder.
 }
 
-// Store the block height of the last auction period
-message LastAuctionPeriodHeight {
-    uint64 height = 1;
-}
-
 // Estimate the block height of the next auction period
 message EstimateNextAuctionPeriodHeight {
     uint64 height = 1;
-}
-
-// Queue of Bids for 1 auction
-message BidsQueue {
-    repeated Bid queue = 1;
 }
