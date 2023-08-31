@@ -49,11 +49,6 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 		return nil, types.ErrInvalidBidAmount
 	}
 
-	bidsQueue, found := k.GetBidsQueue(sdkCtx, msg.AuctionId)
-	if !found {
-		return nil, fmt.Errorf("Bids queue for auction with id %v", msg.AuctionId)
-	}
-
 	// Fetch current auction period
 	latestAuctionPeriod, found := k.GetLatestAuctionPeriod(sdkCtx)
 	if !found {
@@ -82,34 +77,40 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 		}
 	}
 
-	if len(bidsQueue.Queue) == 0 {
-		// For empty queue just add the new entry
-		newBid := &types.Bid{
-			AuctionId:     msg.AuctionId,
+	var bid *types.Bid
+
+	if highestBid.BidderAddress == msg.Bidder {
+		bidAmountGap := msg.Amount.Sub(highestBid.BidAmount)
+		// Send the added amount to auction module
+		err := k.LockBidAmount(sdkCtx, msg.Bidder, bidAmountGap)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to send fund to the auction module account: %s", err.Error())
+		}
+		bid = &types.Bid{
+			AuctionId:     highestBid.AuctionId,
+			BidAmount:     msg.Amount,
+			BidderAddress: highestBid.BidderAddress,
+		}
+	} else {
+		// Return fund to the pervious highest bidder
+		err := k.ReturnPrevioudBidAmount(sdkCtx, highestBid.BidderAddress, highestBid.BidAmount)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to return fund to the previous highest bidder: %s", err.Error())
+		}
+
+		err = k.LockBidAmount(sdkCtx, msg.Bidder, msg.Amount)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to send fund to the auction module account: %s", err.Error())
+		}
+		bid = &types.Bid{
+			AuctionId:     highestBid.AuctionId,
 			BidAmount:     msg.Amount,
 			BidderAddress: msg.Bidder,
 		}
-		k.AddBidToQueue(sdkCtx, *newBid, &bidsQueue)
-	} else {
-		for i, bid := range bidsQueue.Queue {
-			// Check if bid entry from exact bidder exist yet
-			if bid.AuctionId == msg.AuctionId && bid.BidderAddress == msg.Bidder {
-				// Update bid amount of old entry
-				bid.BidAmount = msg.Amount
-
-				bidsQueue.Queue[i] = bid
-
-				k.SetBidsQueue(sdkCtx, bidsQueue, msg.AuctionId)
-			} else {
-				newBid := &types.Bid{
-					AuctionId:     msg.AuctionId,
-					BidAmount:     msg.Amount,
-					BidderAddress: msg.Bidder,
-				}
-				k.AddBidToQueue(sdkCtx, *newBid, &bidsQueue)
-			}
-		}
 	}
+
+	// Update the new bid entry
+	k.UpdateAuctionNewBid(sdkCtx, msg.AuctionId, *bid)
 
 	// nolint: exhaustruct
 	return &types.MsgBidResponse{}, nil
