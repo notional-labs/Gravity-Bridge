@@ -115,3 +115,5 @@ func (k Keeper) GetLastAuctionPeriodBlockHeight(ctx sdk.Context) (blockHeight ty
 	k.cdc.MustUnmarshal(bz, &blockHeight)
 	return blockHeight, true
 }
+
+// TODO: remove auction period func

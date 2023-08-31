@@ -9,6 +9,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
+// TODO: Switch to black list ( remove native token , ..etc.. )
 var (
 	allowTokens = map[string]bool{
 		// USDC
@@ -27,6 +28,13 @@ func CreateUpgradeHandler(
 	return func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info("Starting upgrade...")
 
+		fromVM := make(map[string]uint64)
+		for moduleName, module := range mm.Modules {
+			fromVM[moduleName] = module.ConsensusVersion()
+		}
+
+		fromVM[auctiontypes.StoreKey] = 0
+
 		// Set params
 		defaultParams := auctiontypes.DefaultParams()
 
@@ -39,6 +47,6 @@ func CreateUpgradeHandler(
 		auctionKeeper.SetEstimateAuctionPeriodBlockHeight(ctx, uint64(ctx.BlockHeight())+NextAuctionPeriodHeightMargin)
 
 		ctx.Logger().Info("Upgrade Complete")
-		return mm.RunMigrations(ctx, configurator, vm)
+		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }

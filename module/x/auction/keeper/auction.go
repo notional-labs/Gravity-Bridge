@@ -150,3 +150,5 @@ func (k Keeper) GetHighestBidByAuctionIdAndPeriodID(ctx sdk.Context, auctionId u
 func getKeyForAuction(auction types.Auction) string {
 	return fmt.Sprintf("%v-%v", auction.AuctionPeriodId, auction.Id)
 }
+
+// TODO: remove aution func
