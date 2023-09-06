@@ -79,7 +79,17 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 
 	var bid *types.Bid
 
-	if highestBid.BidderAddress == msg.Bidder {
+	if highestBid == nil {
+		err = k.LockBidAmount(sdkCtx, msg.Bidder, msg.Amount)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to send fund to the auction module account: %s", err.Error())
+		}
+		bid = &types.Bid{
+			AuctionId:     msg.AuctionId,
+			BidAmount:     msg.Amount,
+			BidderAddress: msg.Bidder,
+		}
+	} else if highestBid.BidderAddress == msg.Bidder {
 		bidAmountGap := msg.Amount.Sub(highestBid.BidAmount)
 		// Send the added amount to auction module
 		err := k.LockBidAmount(sdkCtx, msg.Bidder, bidAmountGap)
