@@ -86,7 +86,7 @@ func endAuctionPeriod(
 ) error {
 	for _, auction := range k.GetAllAuctionsByPeriodID(ctx, latestAuctionPeriod.Id) {
 		// Update auction status to finished
-		auction.Status = 2
+		auction.Status = types.AuctionStatus_AUCTION_STATUS_FINISH
 		k.SetAuction(ctx, auction)
 
 		// If no bid continue
@@ -96,7 +96,7 @@ func endAuctionPeriod(
 		}
 
 		// Send in the winning token to the highest bidder address
-		err := bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(auction.HighestBid.BidderAddress), sdk.Coins{auction.AuctionAmount})
+		err := bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.MustAccAddressFromBech32(auction.HighestBid.BidderAddress), sdk.Coins{auction.AuctionAmount})
 		if err != nil {
 			panic(err)
 		}
