@@ -120,7 +120,7 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 	}
 
 	// Update the new bid entry
-	k.UpdateAuctionNewBid(sdkCtx, msg.AuctionId, *bid)
+	k.UpdateAuctionNewBid(sdkCtx, latestAuctionPeriod.Id, msg.AuctionId, *bid)
 
 	// nolint: exhaustruct
 	return &types.MsgBidResponse{}, nil

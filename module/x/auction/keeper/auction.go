@@ -51,15 +51,16 @@ func (k Keeper) UpdateAuctionStatus(ctx sdk.Context, auction *types.Auction, new
 }
 
 // UpdateAuctionNewBid updates the new bid of an auction
-func (k Keeper) UpdateAuctionNewBid(ctx sdk.Context, id uint64, newBid types.Bid) {
+func (k Keeper) UpdateAuctionNewBid(ctx sdk.Context, auctionPeriodId, auctionId uint64, newBid types.Bid) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixAuction))
-	bz := store.Get(uint64ToByte(id))
+	key := []byte(fmt.Sprintf("%v-%v", auctionPeriodId, auctionId))
+	bz := store.Get(key)
 	if len(bz) > 0 {
 		var auction types.Auction
 		k.cdc.MustUnmarshal(bz, &auction)
 		auction.HighestBid = &newBid
 		newBz := k.cdc.MustMarshal(&auction)
-		store.Set(uint64ToByte(id), newBz)
+		store.Set(key, newBz)
 	}
 }
 
