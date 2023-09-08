@@ -6,6 +6,7 @@ KEY="testwallet"
 CHAINID="test-1"
 MONIKER="testnode"
 KEYRING="test"
+rm -rf ~/.gravity
 
 if [ $# -eq 0 ];
 then
