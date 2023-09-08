@@ -25,7 +25,6 @@ else
 	gravity gentx $KEY 1000000stake 0x1d65BCC107689Fb9c35Ae403d028E29C1C90C36A gravity18ytfr4s8lfccy048zl00y3akujxqvq75sfpuzq  --keyring-backend $KEYRING --chain-id $CHAINID
 	gravity collect-gentxs
 	echo -E $(jq '.app_state.gov.voting_params.voting_period = "20s"' ~/.gravity/config/genesis.json) &> ~/.gravity/config/genesis.json
-	echo -E $(jq '.app_state.bech32ibc.nativeHRP = "gravity"' ~/.gravity/config/genesis.json) &> ~/.gravity/config/genesis.json
 	screen -S gravity -d -m gravity start
 	sleep 15
 	gravity tx gov submit-proposal software-upgrade $3 --upgrade-height 7 --from $KEY --deposit 10000000stake --title TEST --description TEST --keyring-backend $KEYRING --chain-id $CHAINID -y
