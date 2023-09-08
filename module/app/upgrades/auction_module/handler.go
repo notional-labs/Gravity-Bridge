@@ -33,8 +33,6 @@ func CreateUpgradeHandler(
 			fromVM[moduleName] = module.ConsensusVersion()
 		}
 
-		fromVM[auctiontypes.StoreKey] = 0
-
 		// Set params
 		defaultParams := auctiontypes.DefaultParams()
 
