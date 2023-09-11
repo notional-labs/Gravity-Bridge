@@ -12,6 +12,7 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 
+	auctionmodule "github.com/Gravity-Bridge/Gravity-Bridge/module/app/upgrades/auction_module"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
@@ -1107,6 +1108,18 @@ func (app *Gravity) registerStoreLoaders() {
 	if upgradeInfo.Name == antares.OrionToAntaresPlanName {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added:   []string{icahosttypes.StoreKey},
+			Renamed: nil,
+			Deleted: nil,
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+
+	// ANTARES auction module store loader setup
+	if upgradeInfo.Name == auctionmodule.AddAuctionModulePlanName {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added:   []string{auctiontypes.ModuleName},
 			Renamed: nil,
 			Deleted: nil,
 		}
