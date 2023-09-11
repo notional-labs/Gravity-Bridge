@@ -40,7 +40,11 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 
 	// Check if bidder has enough balance to submit a bid
 	bidderBalance := k.BankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Bidder), msg.Amount.Denom)
+<<<<<<< HEAD
 	if bidderBalance.IsLT(msg.Amount) {
+=======
+	if bidderBalance.IsLT(*msg.Amount) {
+>>>>>>> develop-auction-module
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "Insurfficient balance, expect to have: %v instead have: %v", msg.Amount.Amount, bidderBalance.Amount)
 	}
 
@@ -68,11 +72,19 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 
 	// If highest bid exist need to check the bid gap and bid amount is higher than previous highest bid amount
 	if highestBid != nil {
+<<<<<<< HEAD
 		if msg.Amount.IsGTE(highestBid.BidAmount) &&
 			(msg.Amount.Sub(highestBid.BidAmount)).IsLT(sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(params.BidGap))) {
 			return nil, types.ErrInvalidBidAmountGap
 		}
 		if msg.Amount.IsLT(highestBid.BidAmount) {
+=======
+		if msg.Amount.IsGTE(*highestBid.BidAmount) &&
+			(msg.Amount.Sub(*highestBid.BidAmount)).IsLT(sdk.NewCoin(msg.Amount.Denom, sdk.NewIntFromUint64(params.BidGap))) {
+			return nil, types.ErrInvalidBidAmountGap
+		}
+		if msg.Amount.IsLT(*highestBid.BidAmount) {
+>>>>>>> develop-auction-module
 			return nil, types.ErrInvalidBidAmount
 		}
 	}
