@@ -1,20 +1,12 @@
 package keeper
 
 import (
-	"encoding/binary"
 	"fmt"
 
 	"github.com/Gravity-Bridge/Gravity-Bridge/module/x/auction/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// helper function to convert uint64 to []byte
-func uint64ToByte(num uint64) []byte {
-	buf := make([]byte, binary.MaxVarintLen64)
-	n := binary.PutUvarint(buf, num)
-	return buf[:n]
-}
 
 // GetAllAuction returns all auctions.
 func (k Keeper) GetAllAuctions(ctx sdk.Context) []types.Auction {
