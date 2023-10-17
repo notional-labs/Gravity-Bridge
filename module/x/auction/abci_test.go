@@ -32,7 +32,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *TestSuite) TestBeginBlocker() {
-	previousAuctionPeriod := types.AuctionPeriod{Id: 1, StartBlockHeight: 0, EndBlockHeight: 4}
+	previousAuctionPeriod := types.AuctionPeriod{StartBlockHeight: 0, EndBlockHeight: 4}
 	expectAmount := sdk.NewCoin("atom", sdk.NewInt(20_000_000))
 
 	testCases := map[string]struct {
@@ -112,14 +112,14 @@ func (suite *TestSuite) TestBeginBlocker() {
 				})
 				if tc.previousAuctionPeriod != nil {
 					if !reflect.DeepEqual(tc.expectAuction, types.Auction{}) {
-						auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
+						auctions := suite.App.GetAuctionKeeper().GetAllAuctions(ctx)
 						// Should contain 1 aution for atom token
 						suite.Equal(len(auctions), 1)
 						auction := auctions[0]
 						suite.Equal(auction, tc.expectAuction)
 
 					} else {
-						auctions := suite.App.GetAuctionKeeper().GetAllAuctionsByPeriodID(ctx, tc.previousAuctionPeriod.Id+1)
+						auctions := suite.App.GetAuctionKeeper().GetAllAuctions(ctx)
 						// Should not cotain any aution
 						suite.Equal(len(auctions), 0)
 					}
@@ -194,16 +194,14 @@ func (suite *TestSuite) TestEndBlocker() {
 
 			// Set auction period and auction
 			newAuctionPeriods := types.AuctionPeriod{
-				Id:               1,
 				StartBlockHeight: uint64(suite.Ctx.BlockHeight()),
 				EndBlockHeight:   uint64(suite.Ctx.BlockHeight()) + suite.App.GetAuctionKeeper().GetParams(suite.Ctx).AuctionPeriod,
 			}
 			suite.App.GetAuctionKeeper().SetAuctionPeriod(suite.Ctx, newAuctionPeriods)
 
 			// Confirm that aution was set
-			lastAution, found := suite.App.GetAuctionKeeper().GetLatestAuctionPeriod(suite.Ctx)
+			_, found := suite.App.GetAuctionKeeper().GetLatestAuctionPeriod(suite.Ctx)
 			suite.Require().True(found)
-			suite.Require().Equal(uint64(1), lastAution.Id)
 
 			atomAuction := types.Auction{
 				Id:              1,
@@ -211,13 +209,13 @@ func (suite *TestSuite) TestEndBlocker() {
 				AuctionAmount:   auctionAmount,
 				Status:          1,
 			}
-			err := suite.App.GetAuctionKeeper().AddNewAuctionToAuctionPeriod(suite.Ctx, 1, atomAuction)
+			err := suite.App.GetAuctionKeeper().AddNewAuctionToAuctionPeriod(suite.Ctx, atomAuction)
 			suite.Require().NoError(err)
 
 			ctx = ctx.WithBlockHeight(tc.ctxHeight)
 
 			if tc.currentHighestBid != nil {
-				auction, _ := suite.App.GetAuctionKeeper().GetAuctionByPeriodIDAndAuctionId(ctx, 1, 1)
+				auction, _ := suite.App.GetAuctionKeeper().GetAuctionById(ctx, 1)
 				auction.HighestBid = tc.currentHighestBid
 				suite.App.GetAuctionKeeper().SetAuction(ctx, auction)
 
@@ -228,7 +226,7 @@ func (suite *TestSuite) TestEndBlocker() {
 			if !tc.expectPanic {
 				auction.EndBlocker(ctx, suite.App.GetAuctionKeeper(), suite.App.GetBankKeeper(), suite.App.GetAccountKeeper())
 				if tc.isAuctionUpdated {
-					auction, found := suite.App.GetAuctionKeeper().GetAuctionByPeriodIDAndAuctionId(ctx, 1, 1)
+					auction, found := suite.App.GetAuctionKeeper().GetAuctionById(ctx, 1)
 					suite.Require().True(found)
 					suite.Require().Equal(types.AuctionStatus_AUCTION_STATUS_FINISH, auction.Status)
 				}
