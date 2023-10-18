@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestMsgBid() {
 		},
 		"Bid amount less than the highest bid": {
 			msg:          *types.NewMsgBid(1, addr0.String(), sdk.NewCoin("stake", sdk.NewInt(50000))),
-			expectedPass: true,
+			expectedPass: false,
 			currentHighestBid: &types.Bid{
 				AuctionId:     1,
 				BidAmount:     sdk.NewCoin("stake", sdk.NewInt(1_000_000)),

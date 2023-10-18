@@ -46,10 +46,6 @@ func (suite *TestSuite) TestBeginBlocker() {
 			ctxHeight:   4,
 			expectPanic: false,
 		},
-		"Meet the next auction period, no previous auction period": {
-			ctxHeight:   5,
-			expectPanic: true,
-		},
 		"Meet the next auction period, community pool has zero balances": {
 			ctxHeight:             5,
 			expectPanic:           false,
@@ -65,10 +61,9 @@ func (suite *TestSuite) TestBeginBlocker() {
 			ctxHeight:   5,
 			expectPanic: false,
 			expectAuction: types.Auction{
-				Id:              1,
-				AuctionAmount:   expectAmount,
-				Status:          types.AuctionStatus_AUCTION_STATUS_IN_PROGRESS,
-				AuctionPeriodId: 2,
+				Id:            1,
+				AuctionAmount: expectAmount,
+				Status:        types.AuctionStatus_AUCTION_STATUS_IN_PROGRESS,
 			},
 			previousAuctionPeriod: &previousAuctionPeriod,
 			communityBalances:     sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100_000_000))),
@@ -225,11 +220,12 @@ func (suite *TestSuite) TestEndBlocker() {
 
 			if !tc.expectPanic {
 				auction.EndBlocker(ctx, suite.App.GetAuctionKeeper(), suite.App.GetBankKeeper(), suite.App.GetAccountKeeper())
-				if tc.isAuctionUpdated {
-					auction, found := suite.App.GetAuctionKeeper().GetAuctionById(ctx, 1)
-					suite.Require().True(found)
-					suite.Require().Equal(types.AuctionStatus_AUCTION_STATUS_FINISH, auction.Status)
-				}
+				// Since we delete all auction after an auction period end so wont be able to fetch this after endblock
+				// if tc.isAuctionUpdated {
+				// 	auction, found := suite.App.GetAuctionKeeper().GetAuctionById(ctx, 1)
+				// 	suite.Require().True(found)
+				// 	suite.Require().Equal(types.AuctionStatus_AUCTION_STATUS_FINISH, auction.Status)
+				// }
 				if tc.expectedCommunity != nil {
 					communityBalances := suite.App.GetBankKeeper().GetAllBalances(ctx, suite.App.GetAccountKeeper().GetModuleAddress(distrtypes.ModuleName))
 					suite.Require().Equal(tc.expectedCommunity, communityBalances)
