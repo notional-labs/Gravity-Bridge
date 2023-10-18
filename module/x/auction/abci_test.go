@@ -219,7 +219,7 @@ func (suite *TestSuite) TestEndBlocker() {
 				auction.HighestBid = tc.currentHighestBid
 				suite.App.GetAuctionKeeper().SetAuction(ctx, auction)
 
-				//Fund auction module with stake locked
+				// Fund auction module with stake locked
 				suite.FundModule(ctx, types.ModuleName, sdk.NewCoins(tc.currentHighestBid.BidAmount))
 			}
 
