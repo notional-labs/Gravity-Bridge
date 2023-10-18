@@ -79,7 +79,8 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 
 	var bid *types.Bid
 
-	if highestBid == nil {
+	switch {
+	case highestBid == nil:
 		err = k.LockBidAmount(sdkCtx, msg.Bidder, msg.Amount)
 		if err != nil {
 			return nil, fmt.Errorf("Unable to send fund to the auction module account: %s", err.Error())
@@ -89,7 +90,8 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 			BidAmount:     msg.Amount,
 			BidderAddress: msg.Bidder,
 		}
-	} else if highestBid.BidderAddress == msg.Bidder {
+
+	case highestBid.BidderAddress == msg.Bidder:
 		bidAmountGap := msg.Amount.Sub(highestBid.BidAmount)
 		// Send the added amount to auction module
 		err := k.LockBidAmount(sdkCtx, msg.Bidder, bidAmountGap)
@@ -101,7 +103,8 @@ func (k msgServer) Bid(ctx context.Context, msg *types.MsgBid) (res *types.MsgBi
 			BidAmount:     msg.Amount,
 			BidderAddress: highestBid.BidderAddress,
 		}
-	} else {
+
+	default:
 		// Return fund to the pervious highest bidder
 		err := k.ReturnPrevioudBidAmount(sdkCtx, highestBid.BidderAddress, highestBid.BidAmount)
 		if err != nil {
