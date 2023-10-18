@@ -49,7 +49,6 @@ func (k Keeper) GetEstimateAuctionPeriodBlockHeight(ctx sdk.Context) (blockHeigh
 	return blockHeight, true
 }
 
-// TODO: remove auction period func
 func (k Keeper) DeleteAutionPeriod(ctx sdk.Context, id uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.KeyPrefixAuctionPeriod))
 

@@ -131,3 +131,5 @@ func (k Keeper) RemoveAuction(ctx sdk.Context, id uint64) {
 
 	store.Delete(uint64ToByte(id))
 }
+
+// TODO: remove aution func
