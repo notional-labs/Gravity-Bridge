@@ -55,15 +55,6 @@ func request_Query_LatestAuctionPeriod_0(ctx context.Context, marshaler runtime.
 	var protoReq QueryLatestAuctionPeriod
 	var metadata runtime.ServerMetadata
 
-	var (
-		err error
-		_   = err
-	)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
-	}
-
 	msg, err := client.LatestAuctionPeriod(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -72,15 +63,6 @@ func request_Query_LatestAuctionPeriod_0(ctx context.Context, marshaler runtime.
 func local_request_Query_LatestAuctionPeriod_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryLatestAuctionPeriod
 	var metadata runtime.ServerMetadata
-
-	var (
-		err error
-		_   = err
-	)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
-	}
 
 	msg, err := server.LatestAuctionPeriod(ctx, &protoReq)
 	return msg, metadata, err
@@ -517,13 +499,13 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"auction", "v1beta", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_LatestAuctionPeriod_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"auction", "v1beta", "period"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_LatestAuctionPeriod_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"auction", "v1beta", "latest-auction-period"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AuctionByAuctionId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 0, 1, 0, 4, 1, 5, 4}, []string{"auction", "v1beta", "period", "auction_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AuctionByAuctionId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 0, 1, 0, 4, 1, 5, 2}, []string{"auction", "v1beta", "auction_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AllAuctionsByBidder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"auction", "v1beta", "auctions-by-bidder-period", "period", "bidder", "address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllAuctionsByBidder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"auction", "v1beta", "auctions-by-bidder", "bidder", "address"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_HighestBidByAuctionId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 0, 1, 0, 4, 1, 5, 5}, []string{"auction", "v1beta", "highest-bid", "period", "auction_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_HighestBidByAuctionId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 0, 1, 0, 4, 1, 5, 3}, []string{"auction", "v1beta", "highest-bid", "auction_id"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
